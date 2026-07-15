@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { goto } from '$app/navigation'
+    import { goto } from '$app/navigation';
+    import Button from '$lib/components/button.svelte';
 
     let name = $state('');
     let teamSize = $state(1);
@@ -100,12 +101,8 @@
             />
             Activer les challenges
         </label>
-        <button
-            onclick={createContest}
-            disabled={creating || !name.trim()}
-            class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
-        >
+        <Button onclick={createContest} variant="primary" disabled={creating || !name.trim()} class="w-full py-3">
             {creating ? 'Création...' : 'Créer'}
-        </button>
+        </Button>
     </div>
 </div>

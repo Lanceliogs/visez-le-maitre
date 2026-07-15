@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
+import { relations } from 'drizzle-orm';
 
 // Contests and admin tokens
 
@@ -22,6 +23,10 @@ export const adminTokens = sqliteTable('admin_tokens', {
     contestId: text('contest_id').notNull().references(() => contests.id),
 });
 
+export const adminTokensRelations = relations(adminTokens, ({ one }) => ({
+    contest: one(contests, { fields: [adminTokens.contestId], references: [contests.id] }),
+}));
+
 // Teams related data
 
 export const teams = sqliteTable('teams', {
@@ -30,6 +35,7 @@ export const teams = sqliteTable('teams', {
     name: text('name').notNull(),
     token: text('token').notNull().unique(),
     pin: text('pin').notNull(),
+    seedGroup: integer('seed_group').notNull().default(0),
     createdAt: text('created_at').notNull(),
 });
 
@@ -38,5 +44,13 @@ export const teamMembers = sqliteTable('team_members', {
     teamId: text('team_id').notNull().references(() => teams.id),
     name: text('name').notNull(),
 });
+
+export const teamsRelations = relations(teams, ({ many }) => ({
+    members: many(teamMembers),
+}));
+
+export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
+    team: one(teams, { fields: [teamMembers.teamId], references: [teams.id] }),
+}));
 
 // TODO: pools, phases, matches, seed_groups

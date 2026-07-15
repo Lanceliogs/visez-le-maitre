@@ -2,6 +2,7 @@
     import { page } from '$app/state';
     import { goto } from '$app/navigation';
     import { onMount } from 'svelte';
+    import Button from '$lib/components/button.svelte';
 
     type Member = { name: string; disabled: boolean };
     
@@ -53,7 +54,7 @@
             contestId: page.params.id,
             contestName: contest.name,
         }));
-        goto(`/contest/${page.params.id}`);
+        goto(`/contest/${page.params.id}/team`);
     }
 </script>
 
@@ -115,13 +116,9 @@
             {#if errorMsg}
                 <p class="text-sm text-red-500">{errorMsg}</p>
             {/if}
-            <button
-                onclick={register}
-                disabled={submitting}
-                class="w-full bg-indigo-600 text-white font-semibold py-3 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
-            >
+            <Button onclick={register} variant="primary" disabled={submitting} class="w-full py-3">
                 {submitting ? 'Inscription...' : "S'inscrire"}
-            </button>
+            </Button>
         </div>
     </div>
 {/if}

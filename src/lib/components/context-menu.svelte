@@ -1,6 +1,7 @@
 <script lang="ts">
     import { page } from '$app/state';
-    import { isAdmin } from '$lib/admin.svelte'
+    import { isAdmin } from '$lib/admin.svelte';
+    import ToolButton from '$lib/components/tool-button.svelte';
 
     let open = $state(false);
     function toggle() {
@@ -14,14 +15,15 @@
 <svelte:window onclick={close} />
 
 <div class="relative">
-    <button
-        class="p-2 rounded hover:bg-gray-100 flex flex-col gap-1"
-        aria-label="Menu"
-        onclick={(e) => { e.stopPropagation(); toggle(); }}>
-        <span class="block w-4 h-0.5 bg-gray-700"></span>
-        <span class="block w-4 h-0.5 bg-gray-700"></span>
-        <span class="block w-4 h-0.5 bg-gray-700"></span>
-    </button>
+    <ToolButton
+        label="Menu"
+        onclick={(e) => { e.stopPropagation(); toggle(); }}
+        class="flex-col gap-1"
+    >
+        <span class="w-4 h-0.5 bg-gray-700"></span>
+        <span class="w-4 h-0.5 bg-gray-700"></span>
+        <span class="w-4 h-0.5 bg-gray-700"></span>
+    </ToolButton>
     
     {#if open}
     <div class="absolute right-0 top-full mt-2 bg-white border rounded-lg shadow-lg py-1 min-w-48 z-50">

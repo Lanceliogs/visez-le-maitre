@@ -43,7 +43,7 @@
             <h2 class="text-sm font-medium text-gray-500 mb-2">Mes concours (équipe)</h2>
             <div class="flex flex-col gap-3">
                 {#each teamContests as contest}
-                    <a href="/contest/{contest.id}" class="border rounded-lg p-4 hover:shadow transition block">
+                    <a href="/contest/{contest.id}/team" class="border rounded-lg p-4 hover:shadow transition block">
                         <p class="font-semibold">{contest.name}</p>
                     </a>
                 {/each}
