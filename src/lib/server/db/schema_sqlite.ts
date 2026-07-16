@@ -13,6 +13,7 @@ export const contests = sqliteTable('contests', {
     scoreTargetConsolanteFinal: integer('score_target_consolante_final').notNull().default(15),
     nbQualified: integer('nb_qualified').notNull().default(16),
     challengesEnabled: integer('challenges_enabled', { mode: 'boolean' }).notNull().default(false),
+    poolSize: integer('pool_size').notNull().default(5),
     createdAt: text('created_at').notNull(),
     completedAt: text('completed_at'),
     lastActivityAt: text('last_activity_at').notNull(),
@@ -53,4 +54,48 @@ export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
     team: one(teams, { fields: [teamMembers.teamId], references: [teams.id] }),
 }));
 
-// TODO: pools, phases, matches, seed_groups
+// Pools
+
+export const pools = sqliteTable('pools', {
+    id: text('id').primaryKey(),
+    contestId: text('contest_id').notNull().references(() => contests.id),
+    name: text('name').notNull(),
+    poolNumber: integer('pool_number').notNull(),
+});
+
+export const poolTeams = sqliteTable('pool_teams', {
+    poolId: text('pool_id').notNull().references(() => pools.id),
+    teamId: text('team_id').notNull().references(() => teams.id),
+});
+
+export const poolsRelations = relations(pools, ({ many }) => ({
+    poolTeams: many(poolTeams),
+}));
+
+export const poolTeamsRelations = relations(poolTeams, ({ one }) => ({
+    pool: one(pools, { fields: [poolTeams.poolId], references: [pools.id] }),
+    team: one(teams, { fields: [poolTeams.teamId], references: [teams.id] }),
+}));
+
+// Matches
+
+export const matches = sqliteTable('matches', {
+    id: text('id').primaryKey(),
+    contestId: text('contest_id').notNull().references(() => contests.id),
+    poolId: text('pool_id').references(() => pools.id),
+    roundNumber: integer('round_number').notNull(),
+    team1Id: text('team1_id').notNull().references(() => teams.id),
+    team2Id: text('team2_id').notNull().references(() => teams.id),
+    scoreTeam1: integer('score_team1'),
+    scoreTeam2: integer('score_team2'),
+    submittedBy: text('submitted_by').references(() => teams.id),
+    confirmed: integer('confirmed', { mode: 'boolean' }).notNull().default(false),
+    winnerId: text('winner_id').references(() => teams.id),
+    status: text('status').notNull().default('pending'),
+});
+
+export const matchesRelations = relations(matches, ({ one }) => ({
+    pool: one(pools, { fields: [matches.poolId], references: [pools.id] }),
+    team1: one(teams, { fields: [matches.team1Id], references: [teams.id] }),
+    team2: one(teams, { fields: [matches.team2Id], references: [teams.id] }),
+}));

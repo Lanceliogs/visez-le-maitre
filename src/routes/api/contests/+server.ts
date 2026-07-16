@@ -17,6 +17,7 @@ export async function POST({ request }) {
         scoreTargetConsolanteFinal: body.scoreTargetConsolanteFinal ?? 15,
         nbQualified: body.nbQualified ?? 16,
         challengesEnabled: body.challengesEnabled ?? false,
+        poolSize: body.poolSize ?? 5,
         createdAt: now,
         lastActivityAt: now,
     });
