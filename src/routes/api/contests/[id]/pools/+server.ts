@@ -1,23 +1,14 @@
 import { json, error } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { pools, poolTeams, teams } from '$lib/server/db/schema_sqlite';
-import { eq } from 'drizzle-orm';
+import { getContestPools, getContestTeams } from '$lib/server/contest';
 
 export async function GET({ params }) {
-    const poolList = await db.query.pools.findMany({
-        where: eq(pools.contestId, params.id),
-        with: {
-            poolTeams: true,
-        },
-    });
+    const poolList = await getContestPools(params.id);
 
     if (poolList.length === 0) {
         throw error(404, 'Aucune poule trouvée');
     }
 
-    const teamList = await db.query.teams.findMany({
-        where: eq(teams.contestId, params.id),
-    });
+    const teamList = await getContestTeams(params.id);
     const teamMap = new Map(teamList.map(t => [t.id, t.name]));
 
     const result = poolList

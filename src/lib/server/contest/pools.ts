@@ -1,4 +1,7 @@
-// Pure pools generation logic
+import { db } from '$lib/server/db';
+import { contests, pools as poolsTable, poolTeams, matches as matchesTable } from '$lib/server/db/schema_sqlite';
+import { eq } from 'drizzle-orm';
+import { getContestTeams } from './teams';
 
 type Team = {
     id: string;
@@ -97,4 +100,50 @@ export function generatePoolMatches(pool: PoolAssignment): MatchTemplate[] {
         rotating.unshift(rotating.pop()!);
     }
     return matches;
+}
+
+export async function getContestPools(contestId: string) {
+    return db.query.pools.findMany({
+        where: eq(poolsTable.contestId, contestId),
+        with: { poolTeams: true },
+    });
+}
+
+export async function startPoolPhase(contestId: string, poolSize: number) {
+    const teamList = await getContestTeams(contestId);
+    const poolAssignments = generatePools(
+        teamList.map(t => ({ id: t.id, seedGroup: t.seedGroup })),
+        poolSize,
+    );
+
+    for (const pool of poolAssignments) {
+        const poolId = crypto.randomUUID();
+        await db.insert(poolsTable).values({
+            id: poolId,
+            contestId,
+            name: pool.name,
+            poolNumber: pool.poolNumber,
+        });
+        for (const teamId of pool.teamIds) {
+            await db.insert(poolTeams).values({ poolId, teamId });
+        }
+        const poolMatches = generatePoolMatches(pool);
+        for (const match of poolMatches) {
+            await db.insert(matchesTable).values({
+                id: crypto.randomUUID(),
+                contestId,
+                poolId,
+                roundNumber: match.roundNumber,
+                team1Id: match.team1Id,
+                team2Id: match.team2Id,
+                status: 'pending',
+            });
+        }
+    }
+
+    await db.update(contests)
+        .set({ status: 'pools', lastActivityAt: new Date().toISOString() })
+        .where(eq(contests.id, contestId));
+
+    return poolAssignments;
 }

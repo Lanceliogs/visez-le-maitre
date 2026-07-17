@@ -1,9 +1,12 @@
 <script lang="ts">
     import { page } from '$app/state';
     import { onMount } from 'svelte';
-    
+    import TeamWaiting from './TeamWaiting.svelte';
+    import TeamPoolMatch from './TeamPoolMatch.svelte';
+
     let contest = $state<any>(null);
     let team = $state<any>(null);
+    let teamToken = $state('');
     let errorMsg = $state('');
 
     onMount(async () => {
@@ -13,20 +16,23 @@
             return;
         }
         const { token } = JSON.parse(stored);
+        teamToken = token;
+
         const contestRes = await fetch(`/api/contests/${page.params.id}`);
         if (!contestRes.ok) {
             errorMsg = 'Concours introuvable';
             return;
         }
         contest = await contestRes.json();
-        const teamRes = await fetch(`/api/contests/${page.params.id}/status`, {
+
+        const statusRes = await fetch(`/api/contests/${page.params.id}/status`, {
             headers: { 'Authorization': `Bearer ${token}` },
         });
-        if (!teamRes.ok) {
+        if (!statusRes.ok) {
             errorMsg = 'Impossible de charger votre équipe';
             return;
         }
-        team = await teamRes.json();
+        team = await statusRes.json();
     });
 </script>
 
@@ -40,13 +46,16 @@
             <h1 class="text-xl font-bold mb-1">{contest.name}</h1>
             <p class="text-sm text-gray-500">Équipe : {team.name}</p>
         </div>
-        <div class="border rounded-lg p-6 text-center">
-            {#if contest.status === 'registration'}
-                <p class="text-lg font-medium">Vous êtes inscrits !</p>
-                <p class="text-sm text-gray-500 mt-2">En attente du début du concours.</p>
-            {:else}
-                <p class="text-lg font-medium">Concours en cours</p>
-            {/if}
-        </div>
+
+        {#if team.phase === 'registration'}
+            <TeamWaiting />
+        {:else if team.phase === 'pools'}
+            <TeamPoolMatch
+                currentMatch={team.currentMatch}
+                completedMatches={team.completedMatches}
+                contestId={page.params.id!}
+                {teamToken}
+            />
+        {/if}
     </div>
 {/if}

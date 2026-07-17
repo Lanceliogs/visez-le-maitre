@@ -1,0 +1,26 @@
+import { db } from '$lib/server/db';
+import { teams, adminTokens } from '$lib/server/db/schema_sqlite';
+import { eq } from 'drizzle-orm';
+
+export function extractToken(request: Request): string | null {
+    const auth = request.headers.get('Authorization');
+    if (!auth?.startsWith('Bearer ')) return null;
+    return auth.slice(7);
+}
+
+export async function getTeamFromToken(token: string, contestId: string) {
+    const team = await db.query.teams.findFirst({
+        where: eq(teams.token, token),
+        with: { members: true },
+    });
+    if (!team || team.contestId !== contestId) return null;
+    return team;
+}
+
+export async function validateAdminToken(token: string, contestId: string) {
+    const record = await db.query.adminTokens.findFirst({
+        where: eq(adminTokens.token, token),
+    });
+    if (!record || record.contestId !== contestId) return false;
+    return true;
+}
