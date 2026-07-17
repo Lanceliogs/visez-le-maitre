@@ -2,6 +2,12 @@ import { db } from '$lib/server/db';
 import { matches, teams } from '$lib/server/db/schema_sqlite';
 import { eq, or, and } from 'drizzle-orm';
 
+export async function getContestMatches(contestId: string) {
+    return db.query.matches.findMany({
+        where: eq(matches.contestId, contestId),
+    });
+}
+
 export async function getTeamMatches(contestId: string, teamId: string) {
     return db.query.matches.findMany({
         where: and(
@@ -62,6 +68,19 @@ export async function confirmScore(matchId: string) {
         : match.team2Id;
     await db.update(matches)
         .set({
+            confirmed: true,
+            winnerId,
+            status: 'completed',
+        })
+        .where(eq(matches.id, matchId));
+}
+
+export async function forceScore(matchId: string, scoreTeam1: number, scoreTeam2: number, team1Id: string, team2Id: string) {
+    const winnerId = scoreTeam1 > scoreTeam2 ? team1Id : team2Id;
+    await db.update(matches)
+        .set({
+            scoreTeam1,
+            scoreTeam2,
             confirmed: true,
             winnerId,
             status: 'completed',

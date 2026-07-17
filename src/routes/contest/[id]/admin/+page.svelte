@@ -7,6 +7,7 @@
     let contest = $state<any>(null);
     let adminToken = $state('');
     let teamList = $state<any[]>([]);
+    let refreshTick = $state(0);
     let eventSource: EventSource | null = null;
 
     onMount(async () => {
@@ -21,7 +22,7 @@
         teamList = await teamsRes.json();
 
         eventSource = new EventSource(`/api/contests/${id}/events`);
-        eventSource.addEventListener('refresh', () => refreshAll());
+        eventSource.addEventListener('refresh', () => { refreshAll(); refreshTick++; });
     });
 
     onDestroy(() => {
@@ -62,7 +63,7 @@
                 onStart={reload}
             />
         {:else if contest.status === 'pools'}
-            <AdminPools contestId={page.params.id!} />
+            <AdminPools contestId={page.params.id!} {adminToken} {refreshTick} />
         {/if}
     </div>
 {/if}
