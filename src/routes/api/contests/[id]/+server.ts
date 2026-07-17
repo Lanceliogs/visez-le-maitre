@@ -1,12 +1,8 @@
 import { json, error } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { contests } from '$lib/server/db/schema_sqlite';
-import { eq } from 'drizzle-orm';
+import { getContest } from '$lib/server/contest';
 
 export async function GET({ params }) {
-    const contest = await db.query.contests.findFirst({
-        where: eq(contests.id, params.id),
-    });
+    const contest = await getContest(params.id);
     if (!contest) {
         return error(404, 'Concours introuvable');
     }

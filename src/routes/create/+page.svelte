@@ -8,6 +8,7 @@
     let scoreTargetFinal = $state(15);
     let scoreTargetConsolanteFinal = $state(15);
     let nbQualified = $state(16);
+    let poolSize = $state(5);
     let challengesEnabled = $state(false);
 
     let creating = $state(false);
@@ -25,6 +26,7 @@
                 scoreTargetFinal,
                 scoreTargetConsolanteFinal,
                 nbQualified,
+                poolSize,
                 challengesEnabled,
             }),
         });
@@ -85,6 +87,13 @@
                 min="1"
                 class="w-full border rounded px-3 py-2 mt-1"
             />
+        </label>
+        <label class="block text-sm font-medium">
+            Taille des poules
+            <select bind:value={poolSize} class="w-full border rounded px-3 py-2 mt-1">
+                <option value={5}>5 équipes</option>
+                <option value={6}>6 équipes</option>
+            </select>
         </label>
         <label class="block text-sm font-medium">
             Équipes qualifiées pour la principale

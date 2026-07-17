@@ -1,24 +1,37 @@
 import { json, error } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { teams } from '$lib/server/db/schema_sqlite';
-import { eq } from 'drizzle-orm';
+import { extractToken, getTeamFromToken } from '$lib/server/auth';
+import { getContest } from '$lib/server/contest';
+import { getTeamMatches, buildCurrentMatch, buildCompletedMatches } from '$lib/server/contest/matches';
 
 export async function GET({ request, params }) {
-    const auth = request.headers.get('Authorization');
-    if (!auth?.startsWith('Bearer ')) {
-        return error(401, 'Token manquant');
+    const token = extractToken(request);
+    if (!token) return error(401, 'Token manquant');
+
+    const team = await getTeamFromToken(token, params.id);
+    if (!team) return error(404, 'Équipe introuvable');
+
+    const contest = await getContest(params.id);
+    if (!contest) return error(404, 'Concours introuvable');
+
+    if (contest.status === 'registration') {
+        return json({
+            id: team.id,
+            name: team.name,
+            members: team.members,
+            phase: contest.status,
+            currentMatch: null,
+            completedMatches: [],
+        });
     }
-    const token = auth.slice(7);
-    const team = await db.query.teams.findFirst({
-        where: eq(teams.token, token),
-        with: { members: true },
-    });
-    if (!team || team.contestId !== params.id) {
-        return error(404, 'Équipe introuvable');
-    }
+
+    const teamMatches = await getTeamMatches(params.id, team.id);
+
     return json({
         id: team.id,
         name: team.name,
         members: team.members,
+        phase: contest.status,
+        currentMatch: await buildCurrentMatch(team.id, team.name, params.id, teamMatches),
+        completedMatches: await buildCompletedMatches(team.id, team.name, teamMatches),
     });
 }
