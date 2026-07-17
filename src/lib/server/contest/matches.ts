@@ -31,7 +31,45 @@ export async function isOpponentBusy(contestId: string, opponentId: string) {
     return !!activeMatch;
 }
 
-export async function buildCurrentMatch(teamId: string, contestId: string, teamMatches: any[]) {
+export async function getMatch(matchId: string) {
+    return db.query.matches.findFirst({
+        where: eq(matches.id, matchId),
+    });
+}
+
+export async function startMatch(matchId: string) {
+    await db.update(matches)
+        .set({ status: 'in_progress' })
+        .where(eq(matches.id, matchId));
+}
+
+export async function submitScore(matchId: string, scoreTeam1: number, scoreTeam2: number, submittedBy: string) {
+    await db.update(matches)
+        .set({
+            scoreTeam1,
+            scoreTeam2,
+            submittedBy,
+            status: 'score_submitted',
+        })
+        .where(eq(matches.id, matchId));
+}
+
+export async function confirmScore(matchId: string) {
+    const match = await getMatch(matchId);
+    if (!match) return;
+    const winnerId = match.scoreTeam1! > match.scoreTeam2!
+        ? match.team1Id
+        : match.team2Id;
+    await db.update(matches)
+        .set({
+            confirmed: true,
+            winnerId,
+            status: 'completed',
+        })
+        .where(eq(matches.id, matchId));
+}
+
+export async function buildCurrentMatch(teamId: string, teamName: string, contestId: string, teamMatches: any[]) {
     const active = teamMatches.find(m =>
         m.status === 'in_progress' || m.status === 'score_submitted'
     );
@@ -58,17 +96,19 @@ export async function buildCurrentMatch(teamId: string, contestId: string, teamM
     return {
         id: nextMatch.id,
         roundNumber: nextMatch.roundNumber,
+        team1Name: isTeam1 ? teamName : (opponent?.name ?? '?'),
+        team2Name: isTeam1 ? (opponent?.name ?? '?') : teamName,
         opponentName: opponent?.name ?? '?',
         status: nextMatch.status,
-        myScore: isTeam1 ? nextMatch.scoreTeam1 : nextMatch.scoreTeam2,
-        theirScore: isTeam1 ? nextMatch.scoreTeam2 : nextMatch.scoreTeam1,
+        scoreTeam1: nextMatch.scoreTeam1,
+        scoreTeam2: nextMatch.scoreTeam2,
         weSubmitted: nextMatch.submittedBy === teamId,
         isTeam1,
         opponentBusy,
     };
 }
 
-export async function buildCompletedMatches(teamId: string, teamMatches: any[]) {
+export async function buildCompletedMatches(teamId: string, teamName: string, teamMatches: any[]) {
     const completed = teamMatches.filter(m => m.status === 'completed');
     return Promise.all(
         completed.map(async (m) => {
@@ -79,9 +119,11 @@ export async function buildCompletedMatches(teamId: string, teamMatches: any[]) 
             const isTeam1 = m.team1Id === teamId;
             return {
                 roundNumber: m.roundNumber,
+                team1Name: isTeam1 ? teamName : (opponent?.name ?? '?'),
+                team2Name: isTeam1 ? (opponent?.name ?? '?') : teamName,
                 opponentName: opponent?.name ?? '?',
-                myScore: isTeam1 ? m.scoreTeam1 : m.scoreTeam2,
-                theirScore: isTeam1 ? m.scoreTeam2 : m.scoreTeam1,
+                scoreTeam1: m.scoreTeam1,
+                scoreTeam2: m.scoreTeam2,
                 won: m.winnerId === teamId,
             };
         })

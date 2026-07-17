@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from '$app/state';
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import TeamWaiting from './TeamWaiting.svelte';
     import TeamPoolMatch from './TeamPoolMatch.svelte';
 
@@ -8,6 +8,7 @@
     let team = $state<any>(null);
     let teamToken = $state('');
     let errorMsg = $state('');
+    let eventSource: EventSource | null = null;
 
     onMount(async () => {
         const stored = localStorage.getItem(`team_${page.params.id}`);
@@ -33,7 +34,21 @@
             return;
         }
         team = await statusRes.json();
+
+        eventSource = new EventSource(`/api/contests/${page.params.id}/events`);
+        eventSource.addEventListener('refresh', () => refreshStatus());
     });
+
+    onDestroy(() => {
+        eventSource?.close();
+    });
+
+    async function refreshStatus() {
+        const res = await fetch(`/api/contests/${page.params.id}/status`, {
+            headers: { 'Authorization': `Bearer ${teamToken}` },
+        });
+        if (res.ok) team = await res.json();
+    }
 </script>
 
 {#if errorMsg}
@@ -55,6 +70,7 @@
                 completedMatches={team.completedMatches}
                 contestId={page.params.id!}
                 {teamToken}
+                onRefresh={refreshStatus}
             />
         {/if}
     </div>

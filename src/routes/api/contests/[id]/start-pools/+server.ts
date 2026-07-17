@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { extractToken, validateAdminToken } from '$lib/server/auth';
 import { getContest, getContestTeams, startPoolPhase } from '$lib/server/contest';
+import { broadcast } from '$lib/server/sse'
 
 export const POST: RequestHandler = async ({ params, request }) => {
     const token = extractToken(request);
@@ -22,6 +23,7 @@ export const POST: RequestHandler = async ({ params, request }) => {
     }
 
     const poolAssignments = await startPoolPhase(params.id, contest.poolSize);
+    broadcast(params.id);
 
     return json({
         pools: poolAssignments.map(p => ({ name: p.name, teamCount: p.teamIds.length })),

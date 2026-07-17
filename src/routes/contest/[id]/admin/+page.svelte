@@ -1,12 +1,13 @@
 <script lang="ts">
     import { page } from '$app/state';
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import AdminRegistration from './AdminRegistration.svelte';
     import AdminPools from './AdminPools.svelte';
 
     let contest = $state<any>(null);
     let adminToken = $state('');
     let teamList = $state<any[]>([]);
+    let eventSource: EventSource | null = null;
 
     onMount(async () => {
         const id = page.params.id;
@@ -18,11 +19,27 @@
         contest = await contestRes.json();
         const teamsRes = await fetch(`/api/contests/${id}/teams`);
         teamList = await teamsRes.json();
+
+        eventSource = new EventSource(`/api/contests/${id}/events`);
+        eventSource.addEventListener('refresh', () => refreshAll());
     });
 
+    onDestroy(() => {
+        eventSource?.close();
+    });
+
+    async function refreshAll() {
+        const id = page.params.id;
+        const [contestRes, teamsRes] = await Promise.all([
+            fetch(`/api/contests/${id}`),
+            fetch(`/api/contests/${id}/teams`),
+        ]);
+        contest = await contestRes.json();
+        teamList = await teamsRes.json();
+    }
+
     async function reload() {
-        const res = await fetch(`/api/contests/${page.params.id}`);
-        contest = await res.json();
+        await refreshAll();
     }
 </script>
 

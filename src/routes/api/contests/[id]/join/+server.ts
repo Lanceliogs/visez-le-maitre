@@ -1,5 +1,6 @@
 import { json, error } from '@sveltejs/kit';
-import { getContest, createNewTeam } from '$lib/server/contest/index.js';
+import { getContest, createNewTeam } from '$lib/server/contest';
+import { broadcast } from '$lib/server/sse';
 
 export async function POST({ params, request }) {
     const body = await request.json();
@@ -14,5 +15,6 @@ export async function POST({ params, request }) {
     const {teamId, token} = await createNewTeam(
         contest.id, body.teamName, body.members, body.pin
     );
+    broadcast(params.id);
     return json({ teamId, token });
 }

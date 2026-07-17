@@ -5,6 +5,7 @@ import { eq } from 'drizzle-orm';
 export async function getContestTeams(contestId: string) {
     return db.query.teams.findMany({
         where: eq(teams.contestId, contestId),
+        with: { members: true },
     });
 }
 

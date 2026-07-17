@@ -31,7 +31,7 @@ export async function GET({ request, params }) {
         name: team.name,
         members: team.members,
         phase: contest.status,
-        currentMatch: await buildCurrentMatch(team.id, params.id, teamMatches),
-        completedMatches: await buildCompletedMatches(team.id, teamMatches),
+        currentMatch: await buildCurrentMatch(team.id, team.name, params.id, teamMatches),
+        completedMatches: await buildCompletedMatches(team.id, team.name, teamMatches),
     });
 }
