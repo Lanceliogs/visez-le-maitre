@@ -33,9 +33,6 @@
         {#if page.url.pathname !== '/about'}
             <a href="/about" class="block px-4 py-2 hover:bg-gray-100">À propos</a>
         {/if}
-        {#if page.url.pathname !== '/admin' && isAdmin()}
-            <a href="/admin" class="block px-4 py-2 hover:bg-gray-100">Administration</a>
-        {/if}
     </div>
     {/if}
 </div>

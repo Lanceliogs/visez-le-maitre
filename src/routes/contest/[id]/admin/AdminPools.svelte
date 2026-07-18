@@ -179,22 +179,20 @@
 {/if}
 
 <div class="border rounded-lg p-4 flex flex-col gap-3">
+    <p class="text-sm text-gray-500">
+        {matchList.filter(m => m.status === 'completed').length} / {matchList.length} matchs terminés
+    </p>
     {#if allMatchesCompleted()}
         <p class="text-sm text-green-600 font-medium">✓ Tous les matchs de poule sont terminés</p>
-        {#if !autoTransition}
-            <Button
-                onclick={doStartFinals}
-                variant="primary"
-                disabled={transitioning}
-                class="w-full py-3"
-            >
-                {transitioning ? 'Transition...' : 'Lancer les finales'}
-            </Button>
-        {/if}
+        <Button
+            onclick={doStartFinals}
+            variant="primary"
+            disabled={transitioning}
+            class="w-full py-3"
+        >
+            {transitioning ? 'Transition...' : 'Lancer les finales'}
+        </Button>
     {:else}
-        <p class="text-sm text-gray-500">
-            {matchList.filter(m => m.status === 'completed').length} / {matchList.length} matchs terminés
-        </p>
         <label class="flex items-center gap-2 text-sm font-medium">
             <input type="checkbox" bind:checked={autoTransition} class="rounded" />
             Passer en finales automatiquement quand tous les matchs sont terminés

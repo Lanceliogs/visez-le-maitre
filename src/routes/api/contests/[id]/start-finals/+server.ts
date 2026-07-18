@@ -6,6 +6,9 @@ import { extractToken, validateAdminToken } from '$lib/server/auth';
 import { getContest } from '$lib/server/contest';
 import { getContestMatches } from '$lib/server/contest/matches';
 import { broadcast } from '$lib/server/sse';
+import { createLogger } from '$lib/server/logger';
+
+const log = createLogger('contest');
 
 export async function POST({ params, request }) {
     const token = extractToken(request);
@@ -31,5 +34,6 @@ export async function POST({ params, request }) {
         .where(eq(contests.id, params.id));
 
     broadcast(params.id);
+    log.info('Finals started', { contestId: params.id });
     return json({ ok: true });
 }

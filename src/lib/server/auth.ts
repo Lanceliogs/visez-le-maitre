@@ -24,3 +24,11 @@ export async function validateAdminToken(token: string, contestId: string) {
     if (!record || record.contestId !== contestId) return false;
     return true;
 }
+
+export function validateAppAdmin(request: Request): boolean {
+    const token = extractToken(request);
+    if (!token) return false;
+    return appAdminTokens.has(token);
+}
+
+export const appAdminTokens = new Set<string>();

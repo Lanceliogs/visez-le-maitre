@@ -2,6 +2,9 @@ import { json, error } from '@sveltejs/kit';
 import { extractToken, validateAdminToken } from '$lib/server/auth';
 import { getMatch, forceScore } from '$lib/server/contest/matches';
 import { broadcast } from '$lib/server/sse';
+import { createLogger } from '$lib/server/logger';
+
+const log = createLogger('match');
 
 export async function POST({ params, request }) {
     const token = extractToken(request);
@@ -22,5 +25,6 @@ export async function POST({ params, request }) {
 
     await forceScore(params.matchId, scoreTeam1, scoreTeam2, match.team1Id, match.team2Id);
     broadcast(params.id);
+    log.warn('Score forced by admin', { contestId: params.id, matchId: params.matchId, scoreTeam1, scoreTeam2 });
     return json({ ok: true });
 }
