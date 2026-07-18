@@ -64,6 +64,6 @@
    - Flow de match single-elimination
    - Vues admin + team + publique
 
-2. **Déploiement Vercel** — adapter pour Postgres, configurer les env vars
+2. **Déploiement Vercel** — adapter pour Postgres, configurer les env vars - DONE
 
 3. **Kiosk polish** — tester le flow complet sur mobile, ajuster l'UX

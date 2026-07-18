@@ -186,14 +186,15 @@
         <div class="border border-card-border bg-white rounded-lg p-4 flex flex-col gap-3">
             <h2 class="font-semibold text-sm">Nettoyage automatique</h2>
             <div class="flex items-center gap-2">
-                <label class="text-sm">Supprimer les concours inactifs depuis plus de</label>
-                <input
-                    type="number"
-                    bind:value={cleanupDays}
-                    min="1"
-                    class="w-16 border rounded px-2 py-1 text-sm"
-                />
-                <span class="text-sm">jours</span>
+                <label class="text-sm">Supprimer les concours inactifs depuis plus de
+                    <input
+                        type="number"
+                        bind:value={cleanupDays}
+                        min="1"
+                        class="w-16 border rounded px-2 py-1 text-sm"
+                    />
+                    <span class="text-sm">jours</span>
+                </label>
             </div>
             <Button onclick={cleanup} variant="danger" disabled={loading} class="w-full py-2">
                 Nettoyer
