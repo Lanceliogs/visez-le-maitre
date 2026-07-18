@@ -1,0 +1,13 @@
+base_url: "http://localhost:5173"
+
+contest:
+  name: "Test Concours 64 équipes"
+  teamSize: 2
+  poolSize: 5
+  scoreTarget: 13
+  nbQualified: 16
+
+teams:
+  count: 64
+  name_prefix: "Equipe"
+  pin_prefix: "1"
