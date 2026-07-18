@@ -1,9 +1,10 @@
 <script lang="ts">
     import Button from '$lib/components/button.svelte';
 
-    let { currentMatch, completedMatches, contestId, teamToken, onRefresh } = $props<{
+    let { currentMatch, completedMatches, ranking, contestId, teamToken, onRefresh } = $props<{
         currentMatch: any;
         completedMatches: any[];
+        ranking: any;
         contestId: string;
         teamToken: string;
         onRefresh: () => void;
@@ -182,7 +183,29 @@
 {:else}
     <div class="border rounded-lg p-6 text-center">
         <p class="text-lg font-medium">Phase de poules terminée</p>
-        <p class="text-sm text-gray-500 mt-2">En attente des résultats.</p>
+        {#if ranking}
+            <p class="text-3xl font-bold mt-2">{ranking.rank}e</p>
+            <p class="text-sm text-gray-500 mt-1">
+                {ranking.wins} victoire{ranking.wins > 1 ? 's' : ''} · {ranking.pointsFor} pts · GA {ranking.goalAverage > 0 ? '+' : ''}{ranking.goalAverage}
+            </p>
+            <div class="mt-3">
+                {#if ranking.qualification === 'principale'}
+                    <span class="inline-block bg-green-100 text-green-800 font-semibold text-sm px-3 py-1 rounded-full">
+                        Qualifié — Principale
+                    </span>
+                {:else if ranking.qualification === 'consolante'}
+                    <span class="inline-block bg-orange-100 text-orange-800 font-semibold text-sm px-3 py-1 rounded-full">
+                        Qualifié — Consolante
+                    </span>
+                {:else}
+                    <span class="inline-block bg-gray-100 text-gray-600 font-semibold text-sm px-3 py-1 rounded-full">
+                        Éliminé
+                    </span>
+                {/if}
+            </div>
+        {:else}
+            <p class="text-sm text-gray-500 mt-2">En attente des résultats.</p>
+        {/if}
     </div>
 {/if}
 

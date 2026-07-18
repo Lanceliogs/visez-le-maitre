@@ -10,10 +10,13 @@
 
     let poolList = $state<any[]>([]);
     let matchList = $state<any[]>([]);
+    let standings = $state<any[]>([]);
     let forceMatchId = $state<string | null>(null);
     let forceScore1 = $state<number | null>(null);
     let forceScore2 = $state<number | null>(null);
     let submitting = $state(false);
+    let autoTransition = $state(false);
+    let transitioning = $state(false);
 
     onMount(async () => {
         await refresh();
@@ -23,19 +26,45 @@
         if (refreshTick > 0) refresh();
     });
 
+    function allMatchesCompleted() {
+        return matchList.length > 0 && matchList.every(m => m.status === 'completed');
+    }
+
+    $effect(() => {
+        if (autoTransition && allMatchesCompleted() && !transitioning) {
+            doStartFinals();
+        }
+    });
+
+    async function doStartFinals() {
+        transitioning = true;
+        await fetch(`/api/contests/${contestId}/start-finals`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${adminToken}` },
+        });
+        transitioning = false;
+    }
+
     async function refresh() {
-        const [poolsRes, matchesRes] = await Promise.all([
+        const [poolsRes, matchesRes, standingsRes] = await Promise.all([
             fetch(`/api/contests/${contestId}/pools`),
             fetch(`/api/contests/${contestId}/matches`),
+            fetch(`/api/contests/${contestId}/standings`),
         ]);
         if (poolsRes.ok) poolList = await poolsRes.json();
         if (matchesRes.ok) matchList = await matchesRes.json();
+        if (standingsRes.ok) standings = await standingsRes.json();
     }
 
     function matchesForPool(poolId: string) {
         return matchList
             .filter(m => m.poolId === poolId)
             .sort((a, b) => a.roundNumber - b.roundNumber);
+    }
+
+    function standingsForPool(poolId: string) {
+        const pool = standings.find(s => s.poolId === poolId);
+        return pool?.standings ?? [];
     }
 
     function statusLabel(status: string) {
@@ -92,6 +121,32 @@
                     <span class="text-xs bg-gray-100 rounded px-2 py-1">{team.name}</span>
                 {/each}
             </div>
+            {#if standingsForPool(pool.id).length > 0}
+                <table class="w-full text-xs mb-3">
+                    <thead>
+                        <tr class="text-left text-gray-500 border-b">
+                            <th class="py-1">#</th>
+                            <th class="py-1">Équipe</th>
+                            <th class="py-1 text-center">V</th>
+                            <th class="py-1 text-center">D</th>
+                            <th class="py-1 text-center">PM</th>
+                            <th class="py-1 text-center">GA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {#each standingsForPool(pool.id) as team, i}
+                            <tr class="border-b last:border-0">
+                                <td class="py-1 text-gray-400">{i + 1}</td>
+                                <td class="py-1 font-medium">{team.teamName}</td>
+                                <td class="py-1 text-center">{team.wins}</td>
+                                <td class="py-1 text-center">{team.losses}</td>
+                                <td class="py-1 text-center">{team.pointsFor}</td>
+                                <td class="py-1 text-center">{team.goalAverage > 0 ? '+' : ''}{team.goalAverage}</td>
+                            </tr>
+                        {/each}
+                    </tbody>
+                </table>
+            {/if}
             <div class="flex flex-col gap-1">
                 {#each matchesForPool(pool.id) as match}
                     <div class="flex items-center justify-between border rounded px-2 py-1 text-sm">
@@ -122,6 +177,30 @@
         </div>
     {/each}
 {/if}
+
+<div class="border rounded-lg p-4 flex flex-col gap-3">
+    {#if allMatchesCompleted()}
+        <p class="text-sm text-green-600 font-medium">✓ Tous les matchs de poule sont terminés</p>
+        {#if !autoTransition}
+            <Button
+                onclick={doStartFinals}
+                variant="primary"
+                disabled={transitioning}
+                class="w-full py-3"
+            >
+                {transitioning ? 'Transition...' : 'Lancer les finales'}
+            </Button>
+        {/if}
+    {:else}
+        <p class="text-sm text-gray-500">
+            {matchList.filter(m => m.status === 'completed').length} / {matchList.length} matchs terminés
+        </p>
+        <label class="flex items-center gap-2 text-sm font-medium">
+            <input type="checkbox" bind:checked={autoTransition} class="rounded" />
+            Passer en finales automatiquement quand tous les matchs sont terminés
+        </label>
+    {/if}
+</div>
 
 {#if forceMatchId}
     {@const match = matchList.find(m => m.id === forceMatchId)}

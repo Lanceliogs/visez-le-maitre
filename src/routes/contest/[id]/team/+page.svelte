@@ -68,6 +68,7 @@
             <TeamPoolMatch
                 currentMatch={team.currentMatch}
                 completedMatches={team.completedMatches}
+                ranking={team.ranking}
                 contestId={page.params.id!}
                 {teamToken}
                 onRefresh={refreshStatus}
