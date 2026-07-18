@@ -1,5 +1,4 @@
-import { db } from '$lib/server/db';
-import { contests, pools as poolsTable, poolTeams, matches as matchesTable } from '$lib/server/db/schema_sqlite';
+import { db, contests, pools as poolsTable, poolTeams, matches as matchesTable } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { getContestTeams } from './teams';
 

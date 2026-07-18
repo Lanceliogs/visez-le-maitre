@@ -1,7 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { validateAppAdmin } from '$lib/server/auth';
-import { db } from '$lib/server/db';
-import { contests, teams } from '$lib/server/db/schema_sqlite';
+import { db, contests } from '$lib/server/db';
 import { eq, sql } from 'drizzle-orm';
 
 export async function GET({ request }) {

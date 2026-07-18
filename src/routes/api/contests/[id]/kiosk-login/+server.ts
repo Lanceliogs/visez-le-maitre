@@ -1,6 +1,5 @@
 import { json, error } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { teams, kioskTokens } from '$lib/server/db/schema_sqlite';
+import { db, teams, kioskTokens } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 
 export async function POST({ params, request }) {

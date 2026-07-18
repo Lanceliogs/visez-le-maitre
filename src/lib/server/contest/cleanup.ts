@@ -1,6 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { db } from '$lib/server/db';
-import { contests, teams, teamMembers, adminTokens, kioskTokens, pools, poolTeams, matches } from '$lib/server/db/schema_sqlite';
+import { db, contests, teams, teamMembers, adminTokens, kioskTokens, pools, poolTeams, matches } from '$lib/server/db';
 import { eq, lt, inArray } from 'drizzle-orm';
 import { createLogger } from '$lib/server/logger';
 

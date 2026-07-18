@@ -1,5 +1,4 @@
-import { db } from '$lib/server/db';
-import { matches, teams } from '$lib/server/db/schema_sqlite';
+import { db, matches, teams } from '$lib/server/db';
 import { eq, or, and } from 'drizzle-orm';
 
 export async function getContestMatches(contestId: string) {

@@ -1,6 +1,5 @@
 import { json, error } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { contests } from '$lib/server/db/schema_sqlite';
+import { db, contests } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 import { extractToken, validateAdminToken } from '$lib/server/auth';
 import { getContest } from '$lib/server/contest';

@@ -1,5 +1,4 @@
-import { db } from '$lib/server/db';
-import { teams, adminTokens } from '$lib/server/db/schema_sqlite';
+import { db, teams, adminTokens } from '$lib/server/db';
 import { eq } from 'drizzle-orm';
 
 export function extractToken(request: Request): string | null {
