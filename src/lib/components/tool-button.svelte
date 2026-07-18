@@ -21,7 +21,7 @@
     {onclick}
     {disabled}
     aria-label={label || undefined}
-    class="w-10 h-10 rounded hover:bg-gray-100 flex items-center justify-center transition {extraClass}"
+    class="w-10 h-10 rounded-lg hover:bg-primary-light flex items-center justify-center transition {extraClass}"
 >
     {@render children()}
 </button>

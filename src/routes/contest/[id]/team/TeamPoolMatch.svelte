@@ -53,9 +53,9 @@
 </script>
 
 {#if currentMatch}
-    <div class="border rounded-lg p-4">
+    <div class="border border-card-border bg-white rounded-lg p-4">
         <h2 class="font-semibold mb-2">Tour {currentMatch.roundNumber}</h2>
-        <p class="text-sm text-gray-500 mb-3">{currentMatch.team1Name} vs {currentMatch.team2Name}</p>
+        <p class="text-sm text-text-muted mb-3">{currentMatch.team1Name} vs {currentMatch.team2Name}</p>
 
         {#if currentMatch.status === 'pending'}
             {#if currentMatch.opponentBusy}
@@ -111,21 +111,21 @@
         {:else if currentMatch.status === 'score_submitted'}
             <div class="flex items-center justify-center gap-4 mt-1">
                 <div class="text-center">
-                    <p class="text-xs text-gray-500">{currentMatch.team1Name}</p>
+                    <p class="text-xs text-text-muted">{currentMatch.team1Name}</p>
                     <p class="text-2xl font-bold">{currentMatch.scoreTeam1}</p>
                 </div>
-                <span class="text-xl text-gray-400">—</span>
+                <span class="text-xl text-text-muted">—</span>
                 <div class="text-center">
-                    <p class="text-xs text-gray-500">{currentMatch.team2Name}</p>
+                    <p class="text-xs text-text-muted">{currentMatch.team2Name}</p>
                     <p class="text-2xl font-bold">{currentMatch.scoreTeam2}</p>
                 </div>
             </div>
             {#if currentMatch.weSubmitted}
-                <p class="text-sm text-gray-500 mt-2 text-center">
+                <p class="text-sm text-text-muted mt-2 text-center">
                     En attente de confirmation par {currentMatch.opponentName}.
                 </p>
             {:else}
-                <p class="text-sm text-gray-500 mt-2 text-center">
+                <p class="text-sm text-text-muted mt-2 text-center">
                     Score proposé par {currentMatch.opponentName}. Confirmez ou contestez.
                 </p>
                 <div class="flex gap-2 mt-3">
@@ -181,11 +181,11 @@
         {/if}
     </div>
 {:else}
-    <div class="border rounded-lg p-6 text-center">
+    <div class="border border-card-border bg-white rounded-lg p-6 text-center">
         <p class="text-lg font-medium">Phase de poules terminée</p>
         {#if ranking}
             <p class="text-3xl font-bold mt-2">{ranking.rank}e</p>
-            <p class="text-sm text-gray-500 mt-1">
+            <p class="text-sm text-text-muted mt-1">
                 {ranking.wins} victoire{ranking.wins > 1 ? 's' : ''} · {ranking.pointsFor} pts · GA {ranking.goalAverage > 0 ? '+' : ''}{ranking.goalAverage}
             </p>
             <div class="mt-3">
@@ -198,19 +198,19 @@
                         Qualifié — Consolante
                     </span>
                 {:else}
-                    <span class="inline-block bg-gray-100 text-gray-600 font-semibold text-sm px-3 py-1 rounded-full">
+                    <span class="inline-block bg-primary-light text-gray-600 font-semibold text-sm px-3 py-1 rounded-full">
                         Éliminé
                     </span>
                 {/if}
             </div>
         {:else}
-            <p class="text-sm text-gray-500 mt-2">En attente des résultats.</p>
+            <p class="text-sm text-text-muted mt-2">En attente des résultats.</p>
         {/if}
     </div>
 {/if}
 
 {#if completedMatches.length > 0}
-    <div class="border rounded-lg p-4">
+    <div class="border border-card-border bg-white rounded-lg p-4">
         <h2 class="font-semibold mb-2">Résultats</h2>
         <div class="flex flex-col gap-2">
             {#each completedMatches as match}

@@ -27,20 +27,20 @@
 </script>
 
 {#if !contest}
-    <p class="text-center text-gray-400">Chargement...</p>
+    <p class="text-center text-text-muted">Chargement...</p>
 {:else}
     <div class="flex flex-col gap-4">
-        <div class="border rounded-lg p-4">
+        <div class="border border-card-border bg-white rounded-lg p-4">
             <h1 class="text-xl font-bold mb-1">{contest.name}</h1>
-            <p class="text-sm text-gray-500">Classement des poules</p>
+            <p class="text-sm text-text-muted">Classement des poules</p>
         </div>
 
         {#each standings as pool}
-            <div class="border rounded-lg p-4">
+            <div class="border border-card-border bg-white rounded-lg p-4">
                 <h2 class="font-semibold mb-2">{pool.poolName}</h2>
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="text-left text-gray-500 border-b">
+                        <tr class="text-left text-text-muted border-b">
                             <th class="py-1">#</th>
                             <th class="py-1">Équipe</th>
                             <th class="py-1 text-center">J</th>
@@ -54,7 +54,7 @@
                     <tbody>
                         {#each pool.standings as team, i}
                             <tr class="border-b last:border-0">
-                                <td class="py-1 text-gray-400">{i + 1}</td>
+                                <td class="py-1 text-text-muted">{i + 1}</td>
                                 <td class="py-1 font-medium">{team.teamName}</td>
                                 <td class="py-1 text-center">{team.played}</td>
                                 <td class="py-1 text-center">{team.wins}</td>

@@ -112,7 +112,7 @@
             case 'pools': return 'bg-orange-100 text-orange-700';
             case 'finals': return 'bg-purple-100 text-purple-700';
             case 'completed': return 'bg-green-100 text-green-700';
-            default: return 'bg-gray-100 text-gray-700';
+            default: return 'bg-primary-light text-text';
         }
     }
 
@@ -147,7 +147,7 @@
         </form>
     {:else}
         <div class="flex items-center justify-between">
-            <p class="text-sm text-gray-500">{contestList.length} concours</p>
+            <p class="text-sm text-text-muted">{contestList.length} concours</p>
             <div class="flex gap-2">
                 <Button onclick={refresh} class="text-sm px-3 py-1">Rafraîchir</Button>
                 <Button onclick={logout} class="text-sm px-3 py-1">Déconnexion</Button>
@@ -155,14 +155,14 @@
         </div>
 
         {#if contestList.length === 0}
-            <p class="text-center text-gray-400 py-8">Aucun concours</p>
+            <p class="text-center text-text-muted py-8">Aucun concours</p>
         {:else}
             <div class="flex flex-col gap-2">
                 {#each contestList as contest}
-                    <div class="border rounded-lg p-3 flex items-center justify-between">
+                    <div class="border border-card-border bg-white rounded-lg p-3 flex items-center justify-between">
                         <div class="flex-1 min-w-0">
                             <p class="font-medium truncate">{contest.name}</p>
-                            <div class="flex items-center gap-2 mt-1 text-xs text-gray-500">
+                            <div class="flex items-center gap-2 mt-1 text-xs text-text-muted">
                                 <span class="px-2 py-0.5 rounded-full text-xs font-medium {statusColor(contest.status)}">
                                     {statusLabel(contest.status)}
                                 </span>
@@ -183,7 +183,7 @@
             </div>
         {/if}
 
-        <div class="border rounded-lg p-4 flex flex-col gap-3">
+        <div class="border border-card-border bg-white rounded-lg p-4 flex flex-col gap-3">
             <h2 class="font-semibold text-sm">Nettoyage automatique</h2>
             <div class="flex items-center gap-2">
                 <label class="text-sm">Supprimer les concours inactifs depuis plus de</label>

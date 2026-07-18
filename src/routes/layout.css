@@ -1,2 +1,37 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
+
+@theme {
+    --color-primary: #4A7C59;
+    --color-primary-hover: #3A6347;
+    --color-primary-light: #EAF3ED;
+    --color-accent: #8B5E3C;
+    --color-accent-hover: #6D4A2F;
+    --color-danger: #C0392B;
+    --color-danger-hover: #962D22;
+    --color-surface: #F7FAF8;
+    --color-card-border: #D6E3DA;
+    --color-text: #2B3D32;
+    --color-text-muted: #6B7E72;
+}
+
+body {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.6;
+}
+
+input:focus, select:focus, textarea:focus {
+    --tw-ring-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+input[readonly] {
+    background-color: var(--color-primary-light);
+}
+
+input::-ms-reveal {
+    display: none;
+}

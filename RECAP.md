@@ -1,47 +1,69 @@
-# What we did today
+# Session du 18 juillet 2026
 
-## Pool Generation (complete)
+## Ce qui a été fait
 
-• Added poolSize to contests schema + created pools, poolTeams, matches tables
-• Pool generation algorithm (src/lib/server/contest/pools.ts): distributes teams using floor division, respects seeding constraints (best effort), round-robin match generation via circle method
-• POST /api/contests/[id]/start-pools — validates, generates pools + matches, flips contest to pools status
-• Pool size select (5 or 6) in contest creation form
+### Pool standings & qualifications
+- `computeStandings` : classement par poule (victoires > points marqués > goal-average)
+- `computeQualifications` : classement global cross-poules, attribue `principale` / `consolante` / `éliminée` selon `nbQualified`
+- API `GET /api/contests/[id]/standings`
+- Vue admin : tableau classement dans chaque poule (AdminPools.svelte)
+- Vue publique : `/contest/[id]/standings`
+- Vue équipe : quand toutes les poules sont terminées, affiche rang + badge de qualification
 
-## Score Submission Flow (complete, untested)
+### Transition poules → finales
+- API `POST /api/contests/[id]/start-finals` : valide que tous les matchs sont terminés, passe en `finals`
+- Admin : bouton "Lancer les finales" + option auto-transition (checkbox)
+- Compteur de matchs terminés toujours visible
 
-• POST /api/contests/[id]/matches/[matchId]/start — either team starts the match
-• POST /api/contests/[id]/matches/[matchId]/score — team submits score
-• POST /api/contests/[id]/matches/[matchId]/confirm — opponent confirms
-• POST /api/contests/[id]/matches/[matchId]/force — admin forces score
-• Team page shows: pending (with opponent availability) → start button → score input → confirm/contest
+### Super admin (`/admin`)
+- Login par mot de passe (`APP_ADMIN_PASSWORD` env var)
+- Token de session hashé en mémoire (jamais le mot de passe en localStorage)
+- Anti-bruteforce : 5 tentatives / 15 min par IP, logs des échecs
+- Liste des concours (nom, statut, nb équipes, date)
+- Suppression d'un concours (cascade complète)
+- Nettoyage auto : supprime les concours inactifs > N jours (`APP_CLEANUP_DAYS`)
+- Cleanup périodique au démarrage du serveur (`hooks.server.ts`)
 
-## SSE Real-time (complete)
+### Logger (`src/lib/server/logger.ts`)
+- `createLogger('tag')` → `.debug()`, `.info()`, `.warn()`, `.error()`
+- Filtrage par niveau via `LOG_LEVEL` env var
+- Logs ajoutés : auth, contest lifecycle, team join, cleanup, admin force score
 
-• src/lib/server/sse.ts — in-memory client registry + broadcast
-• GET /api/contests/[id]/events — SSE stream
-• Broadcasts on: team join, match start, score submit, score confirm, force score, pools start
-• Both team page and admin page listen and auto-refresh
+### Kiosk mode
+- Schema : table `kioskTokens`
+- Admin génère un lien d'activation → ouvre sur l'appareil partagé → stocke le token en localStorage
+- Page kiosk (`/contest/[id]/kiosk`) :
+  - Login par nom d'équipe (autocomplete) + PIN (mode password, Lucide Eye toggle)
+  - Inscription directe pendant la phase registration
+  - Vue équipe complète (réutilise TeamWaiting / TeamPoolMatch)
+  - Déconnexion + auto-logout après 2 min d'inactivité
+  - Pas de menu contextuel (détecté via URL dans le layout)
+  - Adaptatif : le bouton inscription disparaît quand le concours passe en poules
+- API : `POST /api/contests/[id]/kiosk-token`, `GET .../kiosk-token?token=`, `POST .../kiosk-login`
+- Page d'activation : `/contest/[id]/kiosk/activate?token=xxx`
 
-## Admin Pools View (complete, untested)
+### Nettoyage localStorage
+- Page d'accueil : vérifie que chaque concours stocké existe encore, supprime les tokens obsolètes
 
-• GET /api/contests/[id]/matches — all matches for a contest
-• AdminPools.svelte — shows pools with match list, status labels, "Forcer" button with modal
+### Visual identity — Earthy/Green theme
+- Palette de couleurs via `@theme` dans layout.css (vert forêt primary, brun accent)
+- Fond warm off-white, cartes blanches à bordure verte douce
+- Boutons : primary vert, secondary warm, danger rouge-brun
+- Header/footer : fond blanc, titre en couleur primary
+- Scroll-to-top button avec animation slide-up
+- Tous les textes muted harmonisés
+- Lucide icons partout : Menu, RefreshCw, RotateCcw, ArrowUp, Eye, EyeOff
+- Suppression de l'eye natif Edge (`input::-ms-reveal`)
 
-## Refactoring
-• src/lib/server/auth.ts — extractToken, getTeamFromToken, validateAdminToken
-• src/lib/server/contest/ split into barrel:
-  • contests.ts — getContest, createContest
-  • teams.ts — getContestTeams, createNewTeam, setTeamSeedGroup
-  • pools.ts — generatePools, generatePoolMatches, getContestPools, startPoolPhase
-  • matches.ts — getContestMatches, getTeamMatches, getMatch, startMatch, submitScore, confirmScore, forceScore, isOpponentBusy, buildCurrentMatch, buildCompletedMatches
-• Admin page split: AdminRegistration.svelte / AdminPools.svelte
-• Team page split: TeamWaiting.svelte / TeamPoolMatch.svelte
+## Prochaines étapes
 
-## What's next
+1. **Elimination brackets** — la principale feature restante :
+   - Data model (bracket matches, rounds)
+   - Génération du tableau depuis le classement des poules
+   - Principale (top N) + Consolante (16 suivants) + Challenges (optionnel)
+   - Flow de match single-elimination
+   - Vues admin + team + publique
 
-1. Test the full flow — create contest, register 2+ teams, start pools, play a match through start → score → confirm
-2. Pool standings — classement (victoires > points > goal-average), admin view + public view
-3. End of pool phase — detect when all matches are completed, transition to finals
-4. Elimination brackets — main (top N) + consolante (16 next) + challenges (optional)
-5. Kiosk mode — PIN-based login for shared devices
-6. App admin dashboard — manage all contests, force delete, auto-cleanup
+2. **Déploiement Vercel** — adapter pour Postgres, configurer les env vars
+
+3. **Kiosk polish** — tester le flow complet sur mobile, ajuster l'UX

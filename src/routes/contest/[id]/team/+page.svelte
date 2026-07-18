@@ -54,12 +54,12 @@
 {#if errorMsg}
     <p class="text-center text-red-500">{errorMsg}</p>
 {:else if !contest || !team}
-    <p class="text-center text-gray-400">Chargement...</p>
+    <p class="text-center text-text-muted">Chargement...</p>
 {:else}
     <div class="flex flex-col gap-4">
-        <div class="border rounded-lg p-4">
+        <div class="border border-card-border bg-white rounded-lg p-4">
             <h1 class="text-xl font-bold mb-1">{contest.name}</h1>
-            <p class="text-sm text-gray-500">Équipe : {team.name}</p>
+            <p class="text-sm text-text-muted">Équipe : {team.name}</p>
         </div>
 
         {#if team.phase === 'registration'}

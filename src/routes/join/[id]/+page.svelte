@@ -61,14 +61,14 @@
 {#if errorMsg && !contest}
     <p class="text-center text-red-500">{errorMsg}</p>
 {:else if !contest}
-    <p class="text-center text-gray-400">Chargement...</p>
+    <p class="text-center text-text-muted">Chargement...</p>
 {:else}
     <div class="flex flex-col gap-4">
-        <div class="border rounded-lg p-4">
+        <div class="border border-card-border bg-white rounded-lg p-4">
             <h1 class="text-xl font-bold mb-1">{contest.name}</h1>
-            <p class="text-sm text-gray-500">Inscription de votre équipe</p>
+            <p class="text-sm text-text-muted">Inscription de votre équipe</p>
         </div>
-        <div class="border rounded-lg p-4 flex flex-col gap-3">
+        <div class="border border-card-border bg-white rounded-lg p-4 flex flex-col gap-3">
             <div>
                 <label class="block text-sm font-medium mb-1">Nom de l'équipe
                     <input
@@ -99,7 +99,7 @@
                                 type="text"
                                 bind:value={member.name}
                                 placeholder="Nom du joueur {i + 1}"
-                                class="flex-1 border rounded px-3 py-2 {member.disabled ? 'bg-gray-100 text-gray-400' : ''}"
+                                class="flex-1 border rounded px-3 py-2 {member.disabled ? 'bg-primary-light text-text-muted' : ''}"
                                 disabled={member.disabled}
                             />
                             {#if members.length > 1}

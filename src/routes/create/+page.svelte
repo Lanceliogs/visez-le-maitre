@@ -41,7 +41,7 @@
 
 </script>
 
-<div class="border rounded-lg p-4">
+<div class="border border-card-border bg-white rounded-lg p-4">
     <h2 class="font-semibold mb-3">Créer un concours</h2>
     <div class="flex flex-col gap-3">
         <label class="block text-sm font-medium">

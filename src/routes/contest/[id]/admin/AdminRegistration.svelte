@@ -3,6 +3,8 @@
     import QRCode from 'qrcode';
     import Button from '$lib/components/button.svelte';
     import ToolButton from '$lib/components/tool-button.svelte';
+    import RefreshCw from '@lucide/svelte/icons/refresh-cw';
+    import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
 
     let { contestId, adminToken, teamList, onStart } = $props<{
         contestId: string;
@@ -19,6 +21,10 @@
     let showSeeding = $state(false);
     let nbSeedGroups = $state(2);
     let starting = $state(false);
+
+    let kioskLink = $state('');
+    let kioskCopied = $state(false);
+    let generatingKiosk = $state(false);
 
     const seedGroupColors = ['', 'bg-blue-100 border-blue-300', 'bg-orange-100 border-orange-300', 'bg-green-100 border-green-300', 'bg-purple-100 border-purple-300'];
 
@@ -54,23 +60,37 @@
             },
             body: JSON.stringify({ seedGroup: group }),
         });
-        const team = teamList.find((t: any) => t.id === teamId);
-        if (team) team.seedGroup = group;
+        teamList = teamList.map((t: any) =>
+            t.id === teamId ? { ...t, seedGroup: group } : t
+        );
     }
 
     function cycleSeedGroup(teamId: string, currentGroup: number) {
         const next = currentGroup >= nbSeedGroups ? 0 : currentGroup + 1;
         setSeedGroup(teamId, next);
     }
+
+    async function generateKioskLink() {
+        generatingKiosk = true;
+        const res = await fetch(`/api/contests/${contestId}/kiosk-token`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${adminToken}` },
+        });
+        if (res.ok) {
+            const data = await res.json();
+            kioskLink = `${window.location.origin}/contest/${contestId}/kiosk/activate?token=${data.token}`;
+        }
+        generatingKiosk = false;
+    }
 </script>
 
-<div class="border rounded-lg p-4">
+<div class="border border-card-border bg-white rounded-lg p-4">
     <h2 class="font-semibold mb-2">Lien d'inscription</h2>
     <input
         type="text"
         readonly
         value={registrationUrl}
-        class="w-full border rounded px-3 py-2 text-sm bg-gray-50"
+        class="w-full border rounded px-3 py-2 text-sm bg-primary-light"
         onclick={(e) => e.currentTarget.select()}
     />
     <div class="flex flex-row gap-1 justify-between">
@@ -92,13 +112,42 @@
     </div>
 </div>
 
-<div class="border rounded-lg p-4">
+<div class="border border-card-border bg-white rounded-lg p-4">
+    <h2 class="font-semibold mb-2">Kiosque partagé</h2>
+    {#if kioskLink}
+        <input
+            type="text"
+            readonly
+            value={kioskLink}
+            class="w-full border rounded px-3 py-2 text-sm bg-primary-light"
+            onclick={(e) => e.currentTarget.select()}
+        />
+        <Button
+            onclick={() => {
+                navigator.clipboard.writeText(kioskLink);
+                kioskCopied = true;
+                setTimeout(() => kioskCopied = false, 2000);
+            }}
+            class="mt-2"
+        >
+            {kioskCopied ? 'Copié !' : 'Copier le lien'}
+        </Button>
+        <p class="text-xs text-text-muted mt-2">Ouvrez ce lien sur l'appareil partagé pour l'activer comme kiosque.</p>
+    {:else}
+        <p class="text-sm text-text-muted mb-2">Générez un lien d'activation pour un appareil partagé.</p>
+        <Button onclick={generateKioskLink} disabled={generatingKiosk} class="w-full py-2">
+            {generatingKiosk ? 'Génération...' : 'Activer un kiosque'}
+        </Button>
+    {/if}
+</div>
+
+<div class="border border-card-border bg-white rounded-lg p-4">
     <div class="flex justify-between items-center mb-3">
         <h2 class="font-semibold">Équipes inscrites ({teamList.length})</h2>
-        <ToolButton onclick={refreshTeams} label="Rafraîchir la liste" class="text-lg">↻</ToolButton>
+        <ToolButton onclick={refreshTeams} label="Rafraîchir la liste"><RefreshCw size={16} /></ToolButton>
     </div>
     {#if teamList.length === 0}
-        <p class="text-sm text-gray-400 italic">Aucune équipe inscrite.</p>
+        <p class="text-sm text-text-muted italic">Aucune équipe inscrite.</p>
     {:else}
         <div class="flex flex-col gap-2">
             {#each teamList as team}
@@ -106,10 +155,10 @@
                     <div class="flex flex-row justify-between">
                         <p class="font-medium">{team.name}</p>
                         {#if team.seedGroup > 0}
-                            <p class="text-xs text-gray-400">Seed: {team.seedGroup}</p>
+                            <p class="text-xs text-text-muted">Seed: {team.seedGroup}</p>
                         {/if}
                     </div>
-                    <p class="text-sm text-gray-500">
+                    <p class="text-sm text-text-muted">
                         {team.members.map((m: any) => m.name).join(', ')}
                     </p>
                 </div>
@@ -143,7 +192,7 @@
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div class="bg-white rounded-lg p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
             <h2 class="font-semibold mb-3">Groupes d'exclusion</h2>
-            <p class="text-sm text-gray-500 mb-4">
+            <p class="text-sm text-text-muted mb-4">
                 Les équipes du même groupe ne seront pas dans la même poule.
             </p>
             <label class="block text-sm font-medium mb-3">
@@ -168,9 +217,10 @@
                         </ToolButton>
                         <ToolButton
                             onclick={() => setSeedGroup(team.id, 0)}
-                            class="w-auto h-auto text-xs text-gray-400 hover:text-gray-600 hover:bg-transparent"
+                            label="Reset"
+                            class="w-auto h-auto text-text-muted hover:text-text hover:bg-transparent"
                         >
-                            Reset
+                            <RotateCcw size={14} />
                         </ToolButton>
                     </div>
                 {/each}

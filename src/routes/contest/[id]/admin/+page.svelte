@@ -45,12 +45,12 @@
 </script>
 
 {#if !contest}
-    <p class="text-center text-gray-400">Chargement...</p>
+    <p class="text-center text-text-muted">Chargement...</p>
 {:else}
     <div class="flex flex-col gap-4">
-        <div class="border rounded-lg p-4">
+        <div class="border border-card-border bg-white rounded-lg p-4">
             <h1 class="text-xl font-bold mb-1">{contest.name}</h1>
-            <p class="text-sm text-gray-500">
+            <p class="text-sm text-text-muted">
                 Statut : {contest.status === 'registration' ? 'Inscriptions ouvertes' : 'Phase de poules'}
             </p>
         </div>
