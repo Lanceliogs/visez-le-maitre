@@ -3,6 +3,7 @@
     import favicon from '$lib/assets/favicon.svg';
     import ContextMenu from '$lib/components/context-menu.svelte';
     import ArrowUp from '@lucide/svelte/icons/arrow-up';
+    import Target from '@lucide/svelte/icons/target';
     import { page } from '$app/state';
 
     let { children } = $props();
@@ -24,8 +25,11 @@
 
 <div class="h-screen flex flex-col overflow-hidden">
 
-    <header class="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-card-border bg-white">
-        <span class="text-lg font-bold text-primary tracking-tight">Visez Le Maître</span>
+    <header class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-card-border bg-white">
+        <div class="flex flex-row gap-2 items-center">
+            <Target size={28} class="text-primary" />
+            <span class="text-lg font-bold text-primary tracking-tight">Visez Le Maître</span>
+        </div>
         {#if !isKiosk}
             <ContextMenu />
         {/if}
