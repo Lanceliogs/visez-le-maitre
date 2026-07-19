@@ -9,6 +9,7 @@
     let { children } = $props();
 
     let isKiosk = $derived(page.url.pathname.includes('/kiosk'));
+    let isLive = $derived(page.url.pathname.includes('/live'));
     let mainEl: HTMLElement;
     let showScrollTop = $state(false);
 
@@ -23,6 +24,9 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
+{#if isLive}
+    {@render children()}
+{:else}
 <div class="h-screen flex flex-col overflow-hidden">
 
     <header class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-card-border bg-white">
@@ -56,3 +60,4 @@
     </footer>
 
 </div>
+{/if}

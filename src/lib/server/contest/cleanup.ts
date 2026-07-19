@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/private';
-import { db, contests, teams, teamMembers, adminTokens, kioskTokens, pools, poolTeams, matches } from '$lib/server/db';
+import { db, contests, teams, teamMembers, adminTokens, pools, poolTeams, matches } from '$lib/server/db';
 import { eq, lt, inArray } from 'drizzle-orm';
 import { createLogger } from '$lib/server/logger';
 
@@ -21,7 +21,6 @@ export async function deleteContest(contestId: string) {
     await db.delete(teams).where(eq(teams.contestId, contestId));
 
     await db.delete(adminTokens).where(eq(adminTokens.contestId, contestId));
-    await db.delete(kioskTokens).where(eq(kioskTokens.contestId, contestId));
     await db.delete(contests).where(eq(contests.id, contestId));
 }
 

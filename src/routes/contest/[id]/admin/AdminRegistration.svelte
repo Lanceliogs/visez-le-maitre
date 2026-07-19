@@ -24,12 +24,15 @@
 
     let kioskLink = $state('');
     let kioskCopied = $state(false);
-    let generatingKiosk = $state(false);
+    let liveLink = $state('');
+    let liveCopied = $state(false);
 
     const seedGroupColors = ['', 'bg-blue-100 border-blue-300', 'bg-orange-100 border-orange-300', 'bg-green-100 border-green-300', 'bg-purple-100 border-purple-300'];
 
     onMount(() => {
         registrationUrl = `${window.location.origin}/join/${contestId}`;
+        kioskLink = `${window.location.origin}/contest/${contestId}/kiosk`;
+        liveLink = `${window.location.origin}/contest/${contestId}/live`;
         QRCode.toDataURL(registrationUrl, { width: 256, margin: 2 }).then(
             (url: string) => { qrDataUrl = url; }
         );
@@ -70,18 +73,6 @@
         setSeedGroup(teamId, next);
     }
 
-    async function generateKioskLink() {
-        generatingKiosk = true;
-        const res = await fetch(`/api/contests/${contestId}/kiosk-token`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${adminToken}` },
-        });
-        if (res.ok) {
-            const data = await res.json();
-            kioskLink = `${window.location.origin}/contest/${contestId}/kiosk/activate?token=${data.token}`;
-        }
-        generatingKiosk = false;
-    }
 </script>
 
 <div class="border border-card-border bg-white rounded-lg p-4">
@@ -114,31 +105,46 @@
 
 <div class="border border-card-border bg-white rounded-lg p-4">
     <h2 class="font-semibold mb-2">Kiosque partagé</h2>
-    {#if kioskLink}
-        <input
-            type="text"
-            readonly
-            value={kioskLink}
-            class="w-full border rounded px-3 py-2 text-sm bg-primary-light"
-            onclick={(e) => e.currentTarget.select()}
-        />
-        <Button
-            onclick={() => {
-                navigator.clipboard.writeText(kioskLink);
-                kioskCopied = true;
-                setTimeout(() => kioskCopied = false, 2000);
-            }}
-            class="mt-2"
-        >
-            {kioskCopied ? 'Copié !' : 'Copier le lien'}
-        </Button>
-        <p class="text-xs text-text-muted mt-2">Ouvrez ce lien sur l'appareil partagé pour l'activer comme kiosque.</p>
-    {:else}
-        <p class="text-sm text-text-muted mb-2">Générez un lien d'activation pour un appareil partagé.</p>
-        <Button onclick={generateKioskLink} disabled={generatingKiosk} class="w-full py-2">
-            {generatingKiosk ? 'Génération...' : 'Activer un kiosque'}
-        </Button>
-    {/if}
+    <input
+        type="text"
+        readonly
+        value={kioskLink}
+        class="w-full border rounded px-3 py-2 text-sm bg-primary-light"
+        onclick={(e) => e.currentTarget.select()}
+    />
+    <Button
+        onclick={() => {
+            navigator.clipboard.writeText(kioskLink);
+            kioskCopied = true;
+            setTimeout(() => kioskCopied = false, 2000);
+        }}
+        class="mt-2"
+    >
+        {kioskCopied ? 'Copié !' : 'Copier le lien'}
+    </Button>
+    <p class="text-xs text-text-muted mt-2">Ouvrez ce lien sur un appareil partagé pour le mode kiosque.</p>
+</div>
+
+<div class="border border-card-border bg-white rounded-lg p-4">
+    <h2 class="font-semibold mb-2">Lien spectateurs</h2>
+    <input
+        type="text"
+        readonly
+        value={liveLink}
+        class="w-full border rounded px-3 py-2 text-sm bg-primary-light"
+        onclick={(e) => e.currentTarget.select()}
+    />
+    <Button
+        onclick={() => {
+            navigator.clipboard.writeText(liveLink);
+            liveCopied = true;
+            setTimeout(() => liveCopied = false, 2000);
+        }}
+        class="mt-2"
+    >
+        {liveCopied ? 'Copié !' : 'Copier le lien'}
+    </Button>
+    <p class="text-xs text-text-muted mt-2">Affichez ce lien sur un écran/projecteur pour le suivi en direct.</p>
 </div>
 
 <div class="border border-card-border bg-white rounded-lg p-4">

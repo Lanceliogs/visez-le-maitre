@@ -28,16 +28,6 @@ export const adminTokensRelations = relations(adminTokens, ({ one }) => ({
     contest: one(contests, { fields: [adminTokens.contestId], references: [contests.id] }),
 }));
 
-export const kioskTokens = pgTable('kiosk_tokens', {
-    token: text('token').primaryKey(),
-    contestId: text('contest_id').notNull().references(() => contests.id),
-    createdAt: text('created_at').notNull(),
-});
-
-export const kioskTokensRelations = relations(kioskTokens, ({ one }) => ({
-    contest: one(contests, { fields: [kioskTokens.contestId], references: [contests.id] }),
-}));
-
 // Teams
 
 export const teams = pgTable('teams', {

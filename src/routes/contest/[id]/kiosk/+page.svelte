@@ -9,11 +9,10 @@
 
     type Member = { name: string; disabled: boolean };
 
-    let kioskToken = $state('');
     let contest = $state<any>(null);
     let team = $state<any>(null);
     let teamToken = $state('');
-    let mode = $state<'not-activated' | 'login' | 'register' | 'team'>('not-activated');
+    let mode = $state<'login' | 'register' | 'team'>('login');
     let eventSource: EventSource | null = null;
     let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -36,19 +35,11 @@
     const INACTIVITY_MS = 2 * 60 * 1000;
 
     onMount(async () => {
-        const stored = localStorage.getItem(`kiosk_token_${page.params.id}`);
-        if (!stored) {
-            mode = 'not-activated';
-            return;
-        }
-        kioskToken = stored;
-
         const res = await fetch(`/api/contests/${page.params.id}`);
         if (!res.ok) return;
         contest = await res.json();
 
         members = Array.from({ length: contest.teamSize }, () => ({ name: '', disabled: false }));
-        mode = 'login';
 
         const teamsRes = await fetch(`/api/contests/${page.params.id}/teams`);
         if (teamsRes.ok) {
@@ -97,7 +88,7 @@
         const res = await fetch(`/api/contests/${page.params.id}/kiosk-login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pin, teamName: loginTeamName, kioskToken }),
+            body: JSON.stringify({ pin, teamName: loginTeamName }),
         });
 
         if (!res.ok) {
@@ -187,15 +178,7 @@
 <svelte:document onpointerdown={mode === 'team' ? resetInactivity : undefined} />
 
 <div class="min-h-screen flex flex-col px-4 py-6 max-w-md mx-auto">
-    {#if mode === 'not-activated'}
-        <div class="flex-1 flex items-center justify-center">
-            <div class="text-center">
-                <p class="text-lg font-semibold text-gray-600">Kiosque non activé</p>
-                <p class="text-sm text-text-muted mt-2">Demandez à l'organisateur d'activer ce dispositif.</p>
-            </div>
-        </div>
-
-    {:else if mode === 'login'}
+    {#if mode === 'login'}
         <div class="flex flex-col gap-4">
             {#if contest}
                 <div class="border border-card-border bg-white rounded-lg p-4 text-center">

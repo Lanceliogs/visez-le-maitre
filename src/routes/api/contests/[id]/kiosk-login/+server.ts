@@ -1,19 +1,12 @@
 import { json, error } from '@sveltejs/kit';
-import { db, teams, kioskTokens } from '$lib/server/db';
+import { db, teams } from '$lib/server/db';
 import { eq, and } from 'drizzle-orm';
 
 export async function POST({ params, request }) {
-    const { pin, teamName, kioskToken } = await request.json();
+    const { pin, teamName } = await request.json();
 
-    if (!pin || !teamName || !kioskToken) {
-        return error(400, 'PIN, nom d\'équipe et token kiosque requis');
-    }
-
-    const kiosk = await db.query.kioskTokens.findFirst({
-        where: eq(kioskTokens.token, kioskToken),
-    });
-    if (!kiosk || kiosk.contestId !== params.id) {
-        return error(403, 'Token kiosque invalide');
+    if (!pin || !teamName) {
+        return error(400, 'PIN et nom d\'équipe requis');
     }
 
     const team = await db.query.teams.findFirst({

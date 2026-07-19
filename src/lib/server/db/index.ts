@@ -27,7 +27,6 @@ export const db = _db;
 
 export const contests = _schema.contests;
 export const adminTokens = _schema.adminTokens;
-export const kioskTokens = _schema.kioskTokens;
 export const teams = _schema.teams;
 export const teamMembers = _schema.teamMembers;
 export const pools = _schema.pools;
