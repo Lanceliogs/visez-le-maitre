@@ -1,5 +1,5 @@
 """
-Simulate a full pool-phase contest with 64 teams.
+Simulate a full contest: pools + brackets (principale & consolante).
 
 Usage:
     uv run simulate.py [config.yaml]
@@ -269,6 +269,141 @@ def verify_qualifications(client: Client, contest_id: str, teams: list[dict]):
         print(f"\n   No ranking: {no_ranking} teams (pools not finished for them?)")
 
 
+def start_finals(client: Client, contest_id: str, admin_token: str) -> dict:
+    """Start the finals phase. Returns bracket sizes."""
+    print("\n7. Starting finals...")
+    resp = client.post(f"/api/contests/{contest_id}/start-finals", token=admin_token)
+    check(resp, "start finals")
+    data = resp.json()
+    print(f"   Principale: {data['principale']} teams")
+    print(f"   Consolante: {data['consolante']} teams")
+    return data
+
+
+def play_bracket(client: Client, contest_id: str, admin_token: str, teams: list[dict], score_target: int):
+    """Play all bracket rounds until both brackets are complete."""
+    print("\n8. Playing bracket matches...")
+    team_tokens = {t["id"]: t["token"] for t in teams}
+    round_num = 0
+
+    while True:
+        round_num += 1
+        matches = fetch_matches(client, contest_id)
+        bracket_pending = [m for m in matches if m.get("bracket") and m["status"] == "pending"]
+
+        if not bracket_pending:
+            # Check if there are in-progress bracket matches (shouldn't happen in sim)
+            bracket_active = [m for m in matches if m.get("bracket") and m["status"] not in ("completed",)]
+            if not bracket_active:
+                break
+            bracket_pending = [m for m in bracket_active if m["status"] == "pending"]
+            if not bracket_pending:
+                break
+
+        print(f"   Round {round_num}: {len(bracket_pending)} bracket matches to play...")
+        played = 0
+        errors = 0
+
+        for match in bracket_pending:
+            match_id = match["id"]
+            team1_id = match["team1Id"]
+            team2_id = match["team2Id"]
+            token1 = team_tokens.get(team1_id)
+            token2 = team_tokens.get(team2_id)
+
+            if not token1 or not token2:
+                errors += 1
+                print(f"   WARN: missing token for match {match_id}")
+                continue
+
+            # Start match
+            resp = client.post(
+                f"/api/contests/{contest_id}/matches/{match_id}/start",
+                token=token1,
+            )
+            if resp.status_code >= 400:
+                time.sleep(0.05)
+                resp = client.post(
+                    f"/api/contests/{contest_id}/matches/{match_id}/start",
+                    token=token1,
+                )
+            if resp.status_code >= 400:
+                errors += 1
+                print(f"   WARN: Could not start match {match_id}: {resp.text[:100]}")
+                continue
+
+            # Generate score
+            winner_score = score_target
+            loser_score = random.randint(0, score_target - 1)
+            if random.random() < 0.5:
+                s1, s2 = winner_score, loser_score
+            else:
+                s1, s2 = loser_score, winner_score
+
+            # Submit score
+            resp = client.post(
+                f"/api/contests/{contest_id}/matches/{match_id}/score",
+                token=token1,
+                json={"myScore": s1, "theirScore": s2},
+            )
+            if resp.status_code >= 400:
+                errors += 1
+                print(f"   WARN: Score submission failed: {resp.text[:100]}")
+                continue
+
+            # Confirm score
+            resp = client.post(
+                f"/api/contests/{contest_id}/matches/{match_id}/confirm",
+                token=token2,
+            )
+            if resp.status_code >= 400:
+                errors += 1
+                print(f"   WARN: Score confirmation failed: {resp.text[:100]}")
+                continue
+
+            played += 1
+
+        print(f"   Played {played}, errors {errors}")
+
+        # Advance both brackets
+        for bracket in ("principale", "consolante"):
+            resp = client.post(
+                f"/api/contests/{contest_id}/advance-bracket?bracket={bracket}",
+                token=admin_token,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get("newMatches", 0) > 0:
+                    print(f"   Advanced {bracket}: {data['newMatches']} new matches")
+                elif data.get("bracketComplete"):
+                    print(f"   {bracket.capitalize()} complete!")
+
+    # Verify final contest status
+    resp = client.get(f"/api/contests/{contest_id}")
+    if resp.ok:
+        status = resp.json().get("status")
+        print(f"\n   Final contest status: {status}")
+
+
+def show_winners(client: Client, contest_id: str):
+    """Display the bracket winners."""
+    print("\n9. Final results...")
+    matches = fetch_matches(client, contest_id)
+
+    for bracket in ("principale", "consolante"):
+        bracket_matches = [m for m in matches if m.get("bracket") == bracket]
+        if not bracket_matches:
+            continue
+        max_round = max(m["bracketRound"] for m in bracket_matches)
+        final = [m for m in bracket_matches if m["bracketRound"] == max_round]
+        if final and final[0]["status"] == "completed":
+            winner_id = final[0]["winnerId"]
+            winner_name = final[0]["team1Name"] if winner_id == final[0]["team1Id"] else final[0]["team2Name"]
+            print(f"   {bracket.upper()}: {winner_name}")
+        else:
+            print(f"   {bracket.upper()}: pas de vainqueur")
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -305,6 +440,11 @@ def main():
     print()
     verify_qualifications(client, contest_id, teams)
 
+    # Finals
+    start_finals(client, contest_id, admin_token)
+    play_bracket(client, contest_id, admin_token, teams, score_target)
+    show_winners(client, contest_id)
+
     elapsed = time.time() - t0
     print()
     print("=" * 60)
@@ -312,7 +452,7 @@ def main():
     print(f"Contest ID: {contest_id}")
     print(f"Admin token: {admin_token}")
     if errors:
-        print(f"WARNINGS: {errors} match errors encountered")
+        print(f"WARNINGS: {errors} pool match errors encountered")
     print("=" * 60)
 
 

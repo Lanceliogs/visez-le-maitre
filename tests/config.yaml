@@ -6,6 +6,7 @@ contest:
   poolSize: 5
   scoreTarget: 13
   nbQualified: 16
+  nbConsolante: 16
 
 teams:
   count: 64
