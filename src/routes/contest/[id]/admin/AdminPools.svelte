@@ -19,6 +19,7 @@
     let transitioning = $state(false);
 
     onMount(async () => {
+        autoTransition = localStorage.getItem(`autoTransition_${contestId}`) === 'true';
         await refresh();
     });
 
@@ -26,9 +27,15 @@
         if (refreshTick > 0) refresh();
     });
 
+    let poolMatches = $derived(matchList.filter(m => m.poolId !== null));
+
     function allMatchesCompleted() {
-        return matchList.length > 0 && matchList.every(m => m.status === 'completed');
+        return poolMatches.length > 0 && poolMatches.every(m => m.status === 'completed');
     }
+
+    $effect(() => {
+        localStorage.setItem(`autoTransition_${contestId}`, String(autoTransition));
+    });
 
     $effect(() => {
         if (autoTransition && allMatchesCompleted() && !transitioning) {
@@ -180,7 +187,7 @@
 
 <div class="border border-card-border bg-white rounded-lg p-4 flex flex-col gap-3">
     <p class="text-sm text-text-muted">
-        {matchList.filter(m => m.status === 'completed').length} / {matchList.length} matchs terminés
+        {poolMatches.filter(m => m.status === 'completed').length} / {poolMatches.length} matchs terminés
     </p>
     {#if allMatchesCompleted()}
         <p class="text-sm text-green-600 font-medium">✓ Tous les matchs de poule sont terminés</p>

@@ -8,6 +8,7 @@
     let scoreTargetFinal = $state(15);
     let scoreTargetConsolanteFinal = $state(15);
     let nbQualified = $state(16);
+    let nbConsolante = $state(16);
     let poolSize = $state(5);
     let challengesEnabled = $state(false);
 
@@ -26,6 +27,7 @@
                 scoreTargetFinal,
                 scoreTargetConsolanteFinal,
                 nbQualified,
+                nbConsolante,
                 poolSize,
                 challengesEnabled,
             }),
@@ -98,6 +100,15 @@
         <label class="block text-sm font-medium">
             Équipes qualifiées pour la principale
             <select bind:value={nbQualified} class="w-full border rounded px-3 py-2 mt-1">
+                <option value={8}>8</option>
+                <option value={16}>16</option>
+                <option value={32}>32</option>
+            </select>
+        </label>
+        <label class="block text-sm font-medium">
+            Équipes qualifiées pour la consolante
+            <select bind:value={nbConsolante} class="w-full border rounded px-3 py-2 mt-1">
+                <option value={8}>8</option>
                 <option value={16}>16</option>
                 <option value={32}>32</option>
             </select>

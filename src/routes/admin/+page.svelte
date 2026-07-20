@@ -11,6 +11,10 @@
     let cleanupDays = $state(7);
     let cleanupResult = $state<string | null>(null);
 
+    const PAGE_SIZE = 20;
+    let offset = $state(0);
+    let hasMore = $state(false);
+
     onMount(() => {
         const saved = localStorage.getItem('app_admin_token');
         if (saved) {
@@ -39,12 +43,15 @@
     }
 
     async function tryToken() {
-        const res = await fetch('/api/admin/contests', {
+        const res = await fetch(`/api/admin/contests?offset=0&limit=${PAGE_SIZE}`, {
             headers: { 'Authorization': `Bearer ${sessionToken}` },
         });
         if (res.ok) {
             authenticated = true;
-            contestList = await res.json();
+            const data = await res.json();
+            contestList = data;
+            hasMore = data.length === PAGE_SIZE;
+            offset = 0;
         } else {
             localStorage.removeItem('app_admin_token');
             sessionToken = '';
@@ -52,10 +59,24 @@
     }
 
     async function refresh() {
-        const res = await fetch('/api/admin/contests', {
+        const res = await fetch(`/api/admin/contests?offset=${offset}&limit=${PAGE_SIZE}`, {
             headers: { 'Authorization': `Bearer ${sessionToken}` },
         });
-        if (res.ok) contestList = await res.json();
+        if (res.ok) {
+            const data = await res.json();
+            contestList = data;
+            hasMore = data.length === PAGE_SIZE;
+        }
+    }
+
+    function prevPage() {
+        offset = Math.max(0, offset - PAGE_SIZE);
+        refresh();
+    }
+
+    function nextPage() {
+        offset += PAGE_SIZE;
+        refresh();
     }
 
     async function deleteContest(id: string, name: string) {
@@ -147,7 +168,7 @@
         </form>
     {:else}
         <div class="flex items-center justify-between">
-            <p class="text-sm text-text-muted">{contestList.length} concours</p>
+            <p class="text-sm text-text-muted">Page {Math.floor(offset / PAGE_SIZE) + 1}</p>
             <div class="flex gap-2">
                 <Button onclick={refresh} class="text-sm px-3 py-1">Rafraîchir</Button>
                 <Button onclick={logout} class="text-sm px-3 py-1">Déconnexion</Button>
@@ -180,6 +201,15 @@
                         </button>
                     </div>
                 {/each}
+            </div>
+
+            <div class="flex items-center justify-between">
+                <Button onclick={prevPage} disabled={offset === 0} class="text-sm px-4 py-1">
+                    ← Précédent
+                </Button>
+                <Button onclick={nextPage} disabled={!hasMore} class="text-sm px-4 py-1">
+                    Suivant →
+                </Button>
             </div>
         {/if}
 

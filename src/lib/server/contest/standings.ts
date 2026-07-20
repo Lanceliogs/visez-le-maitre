@@ -111,7 +111,7 @@ export async function computeQualifications(contestId: string): Promise<PoolRank
     );
 
     const nbQualified = contest.nbQualified;
-    const nbConsolante = 16;
+    const nbConsolante = contest.nbConsolante;
 
     return allTeams.map((team, i) => {
         let qualification: 'principale' | 'consolante' | 'eliminee';

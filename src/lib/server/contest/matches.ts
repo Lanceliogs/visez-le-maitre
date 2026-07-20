@@ -1,13 +1,14 @@
 import { db, matches, teams } from '$lib/server/db';
 import { eq, or, and } from 'drizzle-orm';
+import type { Match } from './types';
 
-export async function getContestMatches(contestId: string) {
+export async function getContestMatches(contestId: string): Promise<Match[]> {
     return db.query.matches.findMany({
         where: eq(matches.contestId, contestId),
     });
 }
 
-export async function getTeamMatches(contestId: string, teamId: string) {
+export async function getTeamMatches(contestId: string, teamId: string): Promise<Match[]> {
     return db.query.matches.findMany({
         where: and(
             eq(matches.contestId, contestId),
@@ -36,7 +37,7 @@ export async function isOpponentBusy(contestId: string, opponentId: string) {
     return !!activeMatch;
 }
 
-export async function getMatch(matchId: string) {
+export async function getMatch(matchId: string): Promise<Match | undefined> {
     return db.query.matches.findFirst({
         where: eq(matches.id, matchId),
     });
@@ -87,7 +88,7 @@ export async function forceScore(matchId: string, scoreTeam1: number, scoreTeam2
         .where(eq(matches.id, matchId));
 }
 
-export async function buildCurrentMatch(teamId: string, teamName: string, contestId: string, teamMatches: any[]) {
+export async function buildCurrentMatch(teamId: string, teamName: string, contestId: string, teamMatches: Match[]) {
     const active = teamMatches.find(m =>
         m.status === 'in_progress' || m.status === 'score_submitted'
     );
@@ -126,7 +127,7 @@ export async function buildCurrentMatch(teamId: string, teamName: string, contes
     };
 }
 
-export async function buildCompletedMatches(teamId: string, teamName: string, teamMatches: any[]) {
+export async function buildCompletedMatches(teamId: string, teamName: string, teamMatches: Match[]) {
     const completed = teamMatches.filter(m => m.status === 'completed');
     return Promise.all(
         completed.map(async (m) => {

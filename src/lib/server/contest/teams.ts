@@ -1,7 +1,8 @@
 import { db, teams, teamMembers } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
+import type { Team } from './types';
 
-export async function getContestTeams(contestId: string) {
+export async function getContestTeams(contestId: string): Promise<Team[]> {
     return db.query.teams.findMany({
         where: eq(teams.contestId, contestId),
         with: { members: true },
@@ -36,4 +37,11 @@ export async function setTeamSeedGroup(teamId: string, seedGroup: number) {
     await db.update(teams)
         .set({ seedGroup })
         .where(eq(teams.id, teamId));
+}
+
+export async function getTeamByPinAndName(contestId: string, pin: string, teamName: string): Promise<Team | undefined> {
+    return db.query.teams.findFirst({
+        where: and(eq(teams.contestId, contestId), eq(teams.pin, pin), eq(teams.name, teamName)),
+        with: { members: true },
+    });
 }

@@ -13,6 +13,9 @@ export async function GET({ params }) {
     const result = matchList.map(m => ({
         id: m.id,
         poolId: m.poolId,
+        bracket: m.bracket,
+        bracketRound: m.bracketRound,
+        bracketPosition: m.bracketPosition,
         roundNumber: m.roundNumber,
         team1Id: m.team1Id,
         team2Id: m.team2Id,
@@ -22,6 +25,7 @@ export async function GET({ params }) {
         scoreTeam2: m.scoreTeam2,
         status: m.status,
         submittedBy: m.submittedBy,
+        winnerId: m.winnerId,
     }));
 
     return json(result);

@@ -1,9 +1,6 @@
 import { json, error } from '@sveltejs/kit';
-import { db, contests } from '$lib/server/db';
-import { eq } from 'drizzle-orm';
 import { extractToken, validateAdminToken } from '$lib/server/auth';
-import { getContest } from '$lib/server/contest';
-import { getContestMatches } from '$lib/server/contest/matches';
+import { getContest, getContestMatches, computeQualifications, generateBracket, updateContestStatus } from '$lib/server/contest';
 import { broadcast } from '$lib/server/sse';
 import { createLogger } from '$lib/server/logger';
 
@@ -22,17 +19,41 @@ export async function POST({ params, request }) {
         return error(400, 'Le concours n\'est pas en phase de poules');
     }
 
-    const matches = await getContestMatches(params.id);
-    const allCompleted = matches.every(m => m.status === 'completed');
+    const allMatches = await getContestMatches(params.id);
+    const poolMatches = allMatches.filter(m => m.poolId !== null);
+    const allCompleted = poolMatches.every(m => m.status === 'completed');
     if (!allCompleted) {
         return error(400, 'Tous les matchs de poule ne sont pas terminés');
     }
 
-    await db.update(contests)
-        .set({ status: 'finals', lastActivityAt: new Date().toISOString() })
-        .where(eq(contests.id, params.id));
+    const qualifications = await computeQualifications(params.id);
+    const principale = qualifications
+        .filter(q => q.qualification === 'principale')
+        .map(q => ({ teamId: q.teamId, rank: q.rank }));
+    const consolante = qualifications
+        .filter(q => q.qualification === 'consolante')
+        .map((q, i) => ({ teamId: q.teamId, rank: i + 1 }));
+
+    if (principale.length < 2 || (principale.length & (principale.length - 1)) !== 0) {
+        return error(400, `Le nombre de qualifiés principale (${principale.length}) doit être une puissance de 2`);
+    }
+    if (consolante.length < 2 || (consolante.length & (consolante.length - 1)) !== 0) {
+        return error(400, `Le nombre de qualifiés consolante (${consolante.length}) doit être une puissance de 2`);
+    }
+
+    await generateBracket(params.id, principale, 'principale');
+    await generateBracket(params.id, consolante, 'consolante');
+    await updateContestStatus(params.id, 'finals');
 
     broadcast(params.id);
-    log.info('Finals started', { contestId: params.id });
-    return json({ ok: true });
+    log.info('Finals started', {
+        contestId: params.id,
+        principale: principale.length,
+        consolante: consolante.length,
+    });
+
+    return json({
+        principale: principale.length,
+        consolante: consolante.length,
+    });
 }
