@@ -25,11 +25,16 @@
         rotateInterval = setInterval(() => {
             poolView = poolView === 'matches' ? 'standings' : 'matches';
         }, 8000);
+
+        bracketRotateInterval = setInterval(() => {
+            bracketView = bracketView === 'principale' ? 'consolante' : 'principale';
+        }, 10000);
     });
 
     onDestroy(() => {
         eventSource?.close();
         if (rotateInterval) clearInterval(rotateInterval);
+        if (bracketRotateInterval) clearInterval(bracketRotateInterval);
     });
 
     async function fetchAll() {
@@ -46,11 +51,51 @@
     }
 
     let phase = $derived(contest?.status ?? 'registration');
-    let completedCount = $derived(matches.filter(m => m.status === 'completed').length);
-    let totalMatches = $derived(matches.length);
+    let poolMatches = $derived(matches.filter(m => m.poolId !== null));
+    let completedCount = $derived(poolMatches.filter(m => m.status === 'completed').length);
+    let totalMatches = $derived(poolMatches.length);
     let allPoolsDone = $derived(totalMatches > 0 && completedCount === totalMatches);
-    let liveMatches = $derived(matches.filter(m => m.status === 'in_progress' || m.status === 'score_submitted'));
-    let pendingMatches = $derived(matches.filter(m => m.status === 'pending'));
+    let liveMatches = $derived(poolMatches.filter(m => m.status === 'in_progress' || m.status === 'score_submitted'));
+    let pendingMatches = $derived(poolMatches.filter(m => m.status === 'pending'));
+
+    // Bracket data
+    let principaleMatches = $derived(matches.filter(m => m.bracket === 'principale'));
+    let consolanteMatches = $derived(matches.filter(m => m.bracket === 'consolante'));
+
+    let bracketView = $state<'principale' | 'consolante'>('principale');
+    let bracketRotateInterval: ReturnType<typeof setInterval> | null = null;
+
+    function bracketRounds(bMatches: any[]) {
+        const rounds = new Map<number, any[]>();
+        for (const m of bMatches) {
+            const r = m.bracketRound;
+            if (!rounds.has(r)) rounds.set(r, []);
+            rounds.get(r)!.push(m);
+        }
+        return [...rounds.entries()]
+            .sort((a, b) => a[0] - b[0])
+            .map(([round, ms]) => ({ round, matches: ms.sort((a: any, b: any) => a.bracketPosition - b.bracketPosition) }));
+    }
+
+    let principaleRounds = $derived(bracketRounds(principaleMatches));
+    let consolanteRounds = $derived(bracketRounds(consolanteMatches));
+
+    function bracketWinner(rounds: { round: number; matches: any[] }[]) {
+        if (rounds.length === 0) return null;
+        const lastRound = rounds[rounds.length - 1];
+        if (lastRound.matches.length !== 1) return null;
+        const final = lastRound.matches[0];
+        if (final.status !== 'completed') return null;
+        return final.winnerId === final.team1Id ? final.team1Name : final.team2Name;
+    }
+
+    function roundLabel(round: number, totalRounds: number) {
+        const remaining = totalRounds - round;
+        if (remaining === 0) return 'Finale';
+        if (remaining === 1) return 'Demi-finales';
+        if (remaining === 2) return 'Quarts de finale';
+        return `Tour ${round}`;
+    }
 
     // Compute global ranking from standings
     let globalRanking = $derived.by(() => {
@@ -71,8 +116,9 @@
 
     function getQualification(index: number): string {
         const nbQualified = contest?.nbQualified ?? 16;
+        const nbConsolante = contest?.nbConsolante ?? 16;
         if (index < nbQualified) return 'principale';
-        if (index < nbQualified + 16) return 'consolante';
+        if (index < nbQualified + nbConsolante) return 'consolante';
         return 'eliminee';
     }
 </script>
@@ -277,21 +323,124 @@
             </div>
 
         {:else if phase === 'finals'}
-            <!-- FINALS PLACEHOLDER -->
-            <div class="flex flex-col items-center justify-center h-[80vh] gap-6">
-                <h1 class="text-4xl font-bold">{contest.name}</h1>
-                <div class="bg-amber-500/20 border border-amber-500/40 rounded-2xl px-8 py-4">
-                    <span class="text-2xl font-bold text-amber-400">Phase finale en cours</span>
+            <!-- FINALS -->
+            <div class="flex flex-col gap-6">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-2xl font-bold">{contest.name}</h1>
+                    <div class="flex gap-2">
+                        <button
+                            onclick={() => bracketView = 'principale'}
+                            class="px-3 py-1 rounded text-sm {bracketView === 'principale' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400'}"
+                        >Principale</button>
+                        <button
+                            onclick={() => bracketView = 'consolante'}
+                            class="px-3 py-1 rounded text-sm {bracketView === 'consolante' ? 'bg-amber-600 text-white' : 'bg-gray-800 text-gray-400'}"
+                        >Consolante</button>
+                    </div>
                 </div>
+
+                {#key bracketView}
+                    {#if bracketView === 'principale' || bracketView === 'consolante'}
+                        {@const rounds = bracketView === 'principale' ? principaleRounds : consolanteRounds}
+                        {@const winner = bracketWinner(rounds)}
+                        <div in:fade={{ duration: 300 }}>
+                            {#if winner}
+                                <div class="{bracketView === 'principale' ? 'bg-emerald-500/20 border-emerald-500/40' : 'bg-amber-500/20 border-amber-500/40'} border rounded-2xl px-8 py-4 text-center mb-6">
+                                    <p class="text-sm text-gray-400">Vainqueur — {bracketView === 'principale' ? 'Principale' : 'Consolante'}</p>
+                                    <p class="text-3xl font-black {bracketView === 'principale' ? 'text-emerald-400' : 'text-amber-400'}">{winner}</p>
+                                </div>
+                            {/if}
+
+                            {#each rounds as { round, matches: roundMatches }}
+                                <div class="mb-4">
+                                    <h3 class="text-sm font-medium text-gray-400 mb-2">{roundLabel(round, rounds.length)}</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        {#each roundMatches as match}
+                                            {@const isLive = match.status === 'in_progress' || match.status === 'score_submitted'}
+                                            <div class="bg-gray-800 border {isLive ? 'border-amber-500/30' : 'border-gray-700'} rounded-xl p-4">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="font-medium text-sm {match.winnerId === match.team1Id ? 'text-emerald-400' : ''}">{match.team1Name}</span>
+                                                    <span class="text-xl font-black {isLive ? 'text-amber-400' : 'text-white'}">
+                                                        {match.scoreTeam1 ?? '-'}
+                                                    </span>
+                                                </div>
+                                                <div class="text-center text-xs text-gray-500 my-1">vs</div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="font-medium text-sm {match.winnerId === match.team2Id ? 'text-emerald-400' : ''}">{match.team2Name}</span>
+                                                    <span class="text-xl font-black {isLive ? 'text-amber-400' : 'text-white'}">
+                                                        {match.scoreTeam2 ?? '-'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        {/each}
+                                    </div>
+                                </div>
+                            {/each}
+                        </div>
+                    {/if}
+                {/key}
             </div>
 
         {:else}
-            <!-- COMPLETED PLACEHOLDER -->
-            <div class="flex flex-col items-center justify-center h-[80vh] gap-6">
-                <h1 class="text-4xl font-bold">{contest.name}</h1>
-                <div class="bg-emerald-500/20 border border-emerald-500/40 rounded-2xl px-8 py-4">
-                    <span class="text-2xl font-bold text-emerald-400">Concours terminé</span>
+            <!-- COMPLETED -->
+            <div class="flex flex-col gap-6">
+                <div class="text-center pt-6">
+                    <h1 class="text-4xl font-bold mb-2">{contest.name}</h1>
+                    <p class="text-xl text-emerald-400">Concours terminé</p>
                 </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto w-full">
+                    {#if bracketWinner(principaleRounds)}
+                        <div class="bg-gray-800 border border-emerald-500/40 rounded-2xl p-6 text-center">
+                            <p class="text-sm text-gray-400 mb-2">Vainqueur — Principale</p>
+                            <p class="text-3xl font-black text-emerald-400">{bracketWinner(principaleRounds)}</p>
+                        </div>
+                    {/if}
+                    {#if bracketWinner(consolanteRounds)}
+                        <div class="bg-gray-800 border border-amber-500/40 rounded-2xl p-6 text-center">
+                            <p class="text-sm text-gray-400 mb-2">Vainqueur — Consolante</p>
+                            <p class="text-3xl font-black text-amber-400">{bracketWinner(consolanteRounds)}</p>
+                        </div>
+                    {/if}
+                </div>
+
+                <div class="flex justify-center gap-2 mt-4">
+                    <button
+                        onclick={() => bracketView = 'principale'}
+                        class="px-3 py-1 rounded text-sm {bracketView === 'principale' ? 'bg-emerald-600 text-white' : 'bg-gray-800 text-gray-400'}"
+                    >Principale</button>
+                    <button
+                        onclick={() => bracketView = 'consolante'}
+                        class="px-3 py-1 rounded text-sm {bracketView === 'consolante' ? 'bg-amber-600 text-white' : 'bg-gray-800 text-gray-400'}"
+                    >Consolante</button>
+                </div>
+
+                {#key bracketView}
+                    {#if bracketView === 'principale' || bracketView === 'consolante'}
+                        {@const rounds = bracketView === 'principale' ? principaleRounds : consolanteRounds}
+                        <div in:fade={{ duration: 300 }}>
+                            {#each rounds as { round, matches: roundMatches }}
+                                <div class="mb-4 max-w-3xl mx-auto w-full">
+                                    <h3 class="text-sm font-medium text-gray-400 mb-2">{roundLabel(round, rounds.length)}</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {#each roundMatches as match}
+                                            <div class="bg-gray-800 border border-gray-700 rounded-xl p-3">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-sm {match.winnerId === match.team1Id ? 'text-emerald-400 font-bold' : 'text-gray-300'}">{match.team1Name}</span>
+                                                    <span class="font-bold">{match.scoreTeam1 ?? '-'}</span>
+                                                </div>
+                                                <div class="flex items-center justify-between mt-1">
+                                                    <span class="text-sm {match.winnerId === match.team2Id ? 'text-emerald-400 font-bold' : 'text-gray-300'}">{match.team2Name}</span>
+                                                    <span class="font-bold">{match.scoreTeam2 ?? '-'}</span>
+                                                </div>
+                                            </div>
+                                        {/each}
+                                    </div>
+                                </div>
+                            {/each}
+                        </div>
+                    {/if}
+                {/key}
             </div>
         {/if}
     </main>

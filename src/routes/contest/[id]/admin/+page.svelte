@@ -3,6 +3,7 @@
     import { onMount, onDestroy } from 'svelte';
     import AdminRegistration from './AdminRegistration.svelte';
     import AdminPools from './AdminPools.svelte';
+    import AdminBrackets from './AdminBrackets.svelte';
 
     let contest = $state<any>(null);
     let adminToken = $state('');
@@ -51,7 +52,7 @@
         <div class="border border-card-border bg-white rounded-lg p-4">
             <h1 class="text-xl font-bold mb-1">{contest.name}</h1>
             <p class="text-sm text-text-muted">
-                Statut : {contest.status === 'registration' ? 'Inscriptions ouvertes' : 'Phase de poules'}
+                Statut : {contest.status === 'registration' ? 'Inscriptions ouvertes' : contest.status === 'pools' ? 'Phase de poules' : contest.status === 'finals' ? 'Finales' : 'Terminé'}
             </p>
         </div>
 
@@ -64,6 +65,13 @@
             />
         {:else if contest.status === 'pools'}
             <AdminPools contestId={page.params.id!} {adminToken} {refreshTick} />
+        {:else if contest.status === 'finals'}
+            <AdminBrackets contestId={page.params.id!} {adminToken} {refreshTick} />
+        {:else if contest.status === 'completed'}
+            <div class="border border-card-border bg-white rounded-lg p-4 text-center">
+                <p class="text-lg font-semibold text-primary">Concours terminé</p>
+            </div>
+            <AdminBrackets contestId={page.params.id!} {adminToken} {refreshTick} />
         {/if}
     </div>
 {/if}

@@ -30,11 +30,11 @@ export async function GET({ request, params }) {
     const currentMatch = await buildCurrentMatch(team.id, team.name, params.id, teamMatches);
     const completedMatches = await buildCompletedMatches(team.id, team.name, teamMatches);
 
-    // Compute ranking when all pool matches are done (no currentMatch left)
     let ranking = null;
     if (!currentMatch && contest.status === 'pools') {
         const allMatches = await getContestMatches(params.id);
-        const allDone = allMatches.every(m => m.status === 'completed');
+        const poolMatches = allMatches.filter(m => m.poolId !== null);
+        const allDone = poolMatches.length > 0 && poolMatches.every(m => m.status === 'completed');
         if (allDone) {
             const poolRanking = await computeQualifications(params.id);
             ranking = poolRanking.find(r => r.teamId === team.id) ?? null;
