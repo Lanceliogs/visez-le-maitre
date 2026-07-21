@@ -30,7 +30,9 @@
         teamList = await teamsRes.json();
 
         eventSource = new EventSource(`/api/contests/${id}/events`);
-        eventSource.addEventListener('refresh', () => { refreshAll(); refreshTick++; });
+        const onRefresh = () => { refreshAll(); refreshTick++; };
+        eventSource.addEventListener('refresh', onRefresh);
+        eventSource.addEventListener('open', onRefresh);
     });
 
     onDestroy(() => {

@@ -48,7 +48,7 @@
         }
 
         eventSource = new EventSource(`/api/contests/${page.params.id}/events`);
-        eventSource.addEventListener('refresh', async () => {
+        const onRefresh = async () => {
             if (mode === 'team') refreshStatus();
             const [contestRes, teamsRes] = await Promise.all([
                 fetch(`/api/contests/${page.params.id}`),
@@ -59,7 +59,9 @@
             if (mode === 'register' && contest?.status !== 'registration') {
                 mode = 'login';
             }
-        });
+        };
+        eventSource.addEventListener('refresh', onRefresh);
+        eventSource.addEventListener('open', onRefresh);
     });
 
     onDestroy(() => {

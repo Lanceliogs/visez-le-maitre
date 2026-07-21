@@ -37,6 +37,7 @@
 
         eventSource = new EventSource(`/api/contests/${page.params.id}/events`);
         eventSource.addEventListener('refresh', () => refreshStatus());
+        eventSource.addEventListener('open', () => refreshStatus());
     });
 
     onDestroy(() => {

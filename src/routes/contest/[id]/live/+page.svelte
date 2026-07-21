@@ -20,6 +20,7 @@
 
         eventSource = new EventSource(`/api/contests/${contestId}/events`);
         eventSource.addEventListener('refresh', fetchAll);
+        eventSource.addEventListener('open', fetchAll);
     });
 
     onDestroy(() => {
