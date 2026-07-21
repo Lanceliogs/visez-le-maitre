@@ -93,6 +93,7 @@
         <label class="block text-sm font-medium">
             Taille des poules
             <select bind:value={poolSize} class="w-full border rounded px-3 py-2 mt-1">
+                <option value={4}>4 équipes</option>
                 <option value={5}>5 équipes</option>
                 <option value={6}>6 équipes</option>
             </select>

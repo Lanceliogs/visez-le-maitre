@@ -31,7 +31,7 @@ export async function GET({ request, params }) {
     const completedMatches = await buildCompletedMatches(team.id, team.name, teamMatches);
 
     let ranking = null;
-    if (!currentMatch && contest.status === 'pools') {
+    if (contest.status === 'pools' || contest.status === 'finals' || contest.status === 'completed') {
         const allMatches = await getContestMatches(params.id);
         const poolMatches = allMatches.filter(m => m.poolId !== null);
         const allDone = poolMatches.length > 0 && poolMatches.every(m => m.status === 'completed');

@@ -155,9 +155,7 @@
                                             <tr class="text-text-muted border-b border-card-border">
                                                 <th class="text-left py-1">#</th>
                                                 <th class="text-left py-1">Équipe</th>
-                                                <th class="text-center py-1">V</th>
-                                                <th class="text-center py-1">PF</th>
-                                                <th class="text-center py-1">GA</th>
+                                                <th class="text-right py-1">V:PM:GA</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -165,9 +163,7 @@
                                                 <tr class="border-b border-card-border last:border-0">
                                                     <td class="py-1 text-text-muted">{i + 1}</td>
                                                     <td class="py-1 font-medium truncate max-w-[120px]">{team.teamName}</td>
-                                                    <td class="text-center py-1">{team.wins}</td>
-                                                    <td class="text-center py-1">{team.pointsFor}</td>
-                                                    <td class="text-center py-1 {team.goalAverage >= 0 ? 'text-green-600' : 'text-red-500'}">{team.goalAverage > 0 ? '+' : ''}{team.goalAverage}</td>
+                                                    <td class="text-right py-1 tabular-nums">{team.wins}:{team.pointsFor}:<span class="{team.goalAverage >= 0 ? 'text-green-600' : 'text-red-500'}">{team.goalAverage > 0 ? '+' : ''}{team.goalAverage}</span></td>
                                                 </tr>
                                             {/each}
                                         </tbody>
@@ -194,13 +190,10 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-card-border text-text-muted bg-primary-light">
-                            <th class="text-left px-3 py-2">#</th>
-                            <th class="text-left px-3 py-2">Équipe</th>
-                            <th class="text-left px-3 py-2">Poule</th>
-                            <th class="text-center px-3 py-2">V</th>
-                            <th class="text-center px-3 py-2">PF</th>
-                            <th class="text-center px-3 py-2">GA</th>
-                            <th class="text-right px-3 py-2">Qualif.</th>
+                            <th class="text-left px-2 py-2">#</th>
+                            <th class="text-left px-2 py-2">Équipe</th>
+                            <th class="text-right px-2 py-2">V:PM:GA</th>
+                            <th class="text-right px-2 py-2">Qualif.</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -212,19 +205,16 @@
                                 {q === 'principale' ? 'bg-green-50' : q === 'consolante' ? 'bg-orange-50' : 'bg-gray-50 text-text-muted'}
                                 {isLastPrincipale || isLastConsolante ? 'border-b-2 border-gray-300' : 'border-b border-card-border'}
                             ">
-                                <td class="px-3 py-1.5 font-bold">{i + 1}</td>
-                                <td class="px-3 py-1.5 font-medium">{team.teamName}</td>
-                                <td class="px-3 py-1.5 text-text-muted text-xs">{team.poolName}</td>
-                                <td class="text-center px-3 py-1.5">{team.wins}</td>
-                                <td class="text-center px-3 py-1.5">{team.pointsFor}</td>
-                                <td class="text-center px-3 py-1.5 {team.goalAverage >= 0 ? 'text-green-600' : 'text-red-500'}">{team.goalAverage > 0 ? '+' : ''}{team.goalAverage}</td>
-                                <td class="text-right px-3 py-1.5">
+                                <td class="px-2 py-1.5 font-bold">{i + 1}</td>
+                                <td class="px-2 py-1.5 font-medium">{team.teamName}</td>
+                                <td class="text-right px-2 py-1.5 tabular-nums">{team.wins}:{team.pointsFor}:<span class="{team.goalAverage >= 0 ? 'text-green-600' : 'text-red-500'}">{team.goalAverage > 0 ? '+' : ''}{team.goalAverage}</span></td>
+                                <td class="text-right px-2 py-1.5">
                                     {#if q === 'principale'}
-                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Principale</span>
+                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">P</span>
                                     {:else if q === 'consolante'}
-                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">Consolante</span>
+                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-700">C</span>
                                     {:else}
-                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-text-muted">Éliminée</span>
+                                        <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-text-muted">É</span>
                                     {/if}
                                 </td>
                             </tr>

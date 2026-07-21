@@ -1,12 +1,12 @@
-base_url: "http://localhost:5173"
+base_url: "https://visez-le-maitre.vercel.app/"
 
 contest:
   name: "Test Concours 64 équipes"
   teamSize: 2
-  poolSize: 5
+  poolSize: 4
   scoreTarget: 13
-  nbQualified: 16
-  nbConsolante: 16
+  nbQualified: 8
+  nbConsolante: 8
 
 teams:
   count: 64

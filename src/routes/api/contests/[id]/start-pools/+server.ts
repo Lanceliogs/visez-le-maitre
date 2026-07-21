@@ -21,8 +21,9 @@ export const POST: RequestHandler = async ({ params, request }) => {
     }
 
     const teamList = await getContestTeams(params.id);
-    if (teamList.length < 2) {
-        throw error(400, 'Il faut au moins 2 équipes pour démarrer');
+    const minTeams = contest.nbQualified + (contest.nbConsolante ?? 0);
+    if (teamList.length < minTeams) {
+        throw error(400, `Il faut au moins ${minTeams} équipes pour démarrer (principale: ${contest.nbQualified}, consolante: ${contest.nbConsolante ?? 0})`);
     }
 
     const poolAssignments = await startPoolPhase(params.id, contest.poolSize);
