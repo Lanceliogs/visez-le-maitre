@@ -10,6 +10,7 @@
 
     let isKiosk = $derived(page.url.pathname.includes('/kiosk'));
     let isLive = $derived(page.url.pathname.includes('/live'));
+    let isFullWidth = $derived(isKiosk || isLive);
     let mainEl: HTMLElement;
     let showScrollTop = $state(false);
 
@@ -24,9 +25,6 @@
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
-{#if isLive}
-    {@render children()}
-{:else}
 <div class="h-screen flex flex-col overflow-hidden">
 
     <header class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-card-border bg-white">
@@ -34,15 +32,21 @@
             <Target size={28} class="text-primary" />
             <span class="text-lg font-bold text-primary tracking-tight">Visez Le Maître</span>
         </div>
-        {#if !isKiosk}
+        {#if !isFullWidth}
             <ContextMenu />
         {/if}
     </header>
 
     <main bind:this={mainEl} onscroll={onScroll} class="flex-1 overflow-y-auto relative">
-        <div class="w-full max-w-md mx-auto px-4 py-6">
-            {@render children()}
-        </div>
+        {#if isFullWidth}
+            <div class="w-full px-4 py-6">
+                {@render children()}
+            </div>
+        {:else}
+            <div class="w-full max-w-md mx-auto px-4 py-6">
+                {@render children()}
+            </div>
+        {/if}
     </main>
 
     <button
@@ -55,9 +59,10 @@
         <ArrowUp size={18} />
     </button>
 
-    <footer class="flex-shrink-0 text-center text-sm text-text-muted py-4 border-t border-card-border bg-white">
-        Visez Le Maître — 2026
-    </footer>
+    {#if !isFullWidth}
+        <footer class="flex-shrink-0 text-center text-sm text-text-muted py-4 border-t border-card-border bg-white">
+            Visez Le Maître — 2026
+        </footer>
+    {/if}
 
 </div>
-{/if}

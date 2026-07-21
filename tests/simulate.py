@@ -21,7 +21,7 @@ import yaml
 # ---------------------------------------------------------------------------
 
 def load_config(path: str = "config.yaml") -> dict:
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -408,6 +408,19 @@ def show_winners(client: Client, contest_id: str):
 # Main
 # ---------------------------------------------------------------------------
 
+def pause(msg: str, contest_id: str, admin_token: str, base_url: str = "http://localhost:5173"):
+    """Pause and display useful links."""
+    print()
+    print("-" * 60)
+    print(f"  PAUSE: {msg}")
+    print(f"  Admin:  {base_url}/contest/{contest_id}/admin?token={admin_token}")
+    print(f"  Live:   {base_url}/contest/{contest_id}/live")
+    print(f"  Kiosk:  {base_url}/contest/{contest_id}/kiosk")
+    print("-" * 60)
+    input("  Press Enter to continue...")
+    print()
+
+
 def main():
     config_path = sys.argv[1] if len(sys.argv) > 1 else "config.yaml"
     if not Path(config_path).exists():
@@ -427,23 +440,196 @@ def main():
 
     contest_id, admin_token = create_contest(client, cfg)
     teams = register_teams(client, contest_id, cfg)
+
+    pause("Registration complete — check views before starting pools",
+          contest_id, admin_token, client.base_url)
+
     start_pools(client, contest_id, admin_token)
 
     matches = fetch_matches(client, contest_id)
     print(f"   {len(matches)} matches fetched.")
 
     score_target = cfg["contest"].get("scoreTarget", 13)
-    played, errors = play_matches(client, contest_id, matches, teams, score_target)
+
+    # Play half the pool matches, then pause
+    team_tokens = {t["id"]: t["token"] for t in teams}
+    pending = [m for m in matches if m["status"] == "pending"]
+    half = len(pending) // 2
+    print(f"4. Playing first {half}/{len(pending)} pool matches...")
+    played_count = 0
+    errors = 0
+    for match in pending[:half]:
+        match_id = match["id"]
+        token1 = team_tokens[match["team1Id"]]
+        token2 = team_tokens[match["team2Id"]]
+
+        resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/start", token=token1)
+        if resp.status_code >= 400:
+            time.sleep(0.05)
+            resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/start", token=token1)
+        if resp.status_code >= 400:
+            errors += 1
+            continue
+
+        winner_score = score_target
+        loser_score = random.randint(0, score_target - 1)
+        s1, s2 = (winner_score, loser_score) if random.random() < 0.5 else (loser_score, winner_score)
+
+        resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/score",
+                           token=token1, json={"myScore": s1, "theirScore": s2})
+        if resp.status_code >= 400:
+            errors += 1
+            continue
+
+        resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/confirm", token=token2)
+        if resp.status_code >= 400:
+            errors += 1
+            continue
+
+        played_count += 1
+        if played_count % 20 == 0:
+            print(f"   ... {played_count}/{half} matches played")
+
+    print(f"   Done: {played_count} played, {errors} errors.")
+
+    pause("Pools mid-way — check live/admin views with partial results",
+          contest_id, admin_token, client.base_url)
+
+    # Play remaining pool matches
+    remaining = pending[half:]
+    print(f"   Playing remaining {len(remaining)} pool matches...")
+    played_count = 0
+    for match in remaining:
+        match_id = match["id"]
+        token1 = team_tokens[match["team1Id"]]
+        token2 = team_tokens[match["team2Id"]]
+
+        resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/start", token=token1)
+        if resp.status_code >= 400:
+            time.sleep(0.05)
+            resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/start", token=token1)
+        if resp.status_code >= 400:
+            errors += 1
+            continue
+
+        winner_score = score_target
+        loser_score = random.randint(0, score_target - 1)
+        s1, s2 = (winner_score, loser_score) if random.random() < 0.5 else (loser_score, winner_score)
+
+        resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/score",
+                           token=token1, json={"myScore": s1, "theirScore": s2})
+        if resp.status_code >= 400:
+            errors += 1
+            continue
+
+        resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/confirm", token=token2)
+        if resp.status_code >= 400:
+            errors += 1
+            continue
+
+        played_count += 1
+        if played_count % 20 == 0:
+            print(f"   ... {played_count}/{len(remaining)} matches played")
+
+    print(f"   Done: {played_count} played, {errors} errors.")
 
     print()
     verify_standings(client, contest_id)
     print()
     verify_qualifications(client, contest_id, teams)
 
+    pause("Pools complete — check qualifications view before starting finals",
+          contest_id, admin_token, client.base_url)
+
     # Finals
     start_finals(client, contest_id, admin_token)
-    play_bracket(client, contest_id, admin_token, teams, score_target)
+
+    # Play half of bracket (round 1 + round 2), then pause
+    print("\n8. Playing bracket matches...")
+    round_num = 0
+    mid_pause_done = False
+
+    while True:
+        round_num += 1
+        matches = fetch_matches(client, contest_id)
+        bracket_pending = [m for m in matches if m.get("bracket") and m["status"] == "pending"]
+
+        if not bracket_pending:
+            bracket_active = [m for m in matches if m.get("bracket") and m["status"] not in ("completed",)]
+            if not bracket_active:
+                break
+            bracket_pending = [m for m in bracket_active if m["status"] == "pending"]
+            if not bracket_pending:
+                break
+
+        print(f"   Round {round_num}: {len(bracket_pending)} bracket matches to play...")
+        played = 0
+        errs = 0
+
+        for match in bracket_pending:
+            match_id = match["id"]
+            token1 = team_tokens.get(match["team1Id"])
+            token2 = team_tokens.get(match["team2Id"])
+
+            if not token1 or not token2:
+                errs += 1
+                continue
+
+            resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/start", token=token1)
+            if resp.status_code >= 400:
+                time.sleep(0.05)
+                resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/start", token=token1)
+            if resp.status_code >= 400:
+                errs += 1
+                continue
+
+            winner_score = score_target
+            loser_score = random.randint(0, score_target - 1)
+            s1, s2 = (winner_score, loser_score) if random.random() < 0.5 else (loser_score, winner_score)
+
+            resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/score",
+                               token=token1, json={"myScore": s1, "theirScore": s2})
+            if resp.status_code >= 400:
+                errs += 1
+                continue
+
+            resp = client.post(f"/api/contests/{contest_id}/matches/{match_id}/confirm", token=token2)
+            if resp.status_code >= 400:
+                errs += 1
+                continue
+
+            played += 1
+
+        print(f"   Played {played}, errors {errs}")
+
+        # Advance both brackets
+        for bracket in ("principale", "consolante"):
+            resp = client.post(
+                f"/api/contests/{contest_id}/advance-bracket?bracket={bracket}",
+                token=admin_token,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get("newMatches", 0) > 0:
+                    print(f"   Advanced {bracket}: {data['newMatches']} new matches")
+                elif data.get("bracketComplete"):
+                    print(f"   {bracket.capitalize()} complete!")
+
+        if not mid_pause_done and round_num == 2:
+            mid_pause_done = True
+            pause("Finals mid-way (after round 2) — check bracket views",
+                  contest_id, admin_token, client.base_url)
+
+    # Verify final contest status
+    resp = client.get(f"/api/contests/{contest_id}")
+    if resp.ok:
+        status = resp.json().get("status")
+        print(f"\n   Final contest status: {status}")
+
     show_winners(client, contest_id)
+
+    pause("Contest complete — check final views",
+          contest_id, admin_token, client.base_url)
 
     elapsed = time.time() - t0
     print()
@@ -451,8 +637,6 @@ def main():
     print(f"DONE in {elapsed:.1f}s")
     print(f"Contest ID: {contest_id}")
     print(f"Admin token: {admin_token}")
-    if errors:
-        print(f"WARNINGS: {errors} pool match errors encountered")
     print("=" * 60)
 
 

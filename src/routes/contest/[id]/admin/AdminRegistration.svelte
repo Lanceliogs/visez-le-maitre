@@ -5,6 +5,7 @@
     import ToolButton from '$lib/components/tool-button.svelte';
     import RefreshCw from '@lucide/svelte/icons/refresh-cw';
     import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
+    import ChevronRight from '@lucide/svelte/icons/chevron-right';
 
     let { contestId, adminToken, teamList, onStart } = $props<{
         contestId: string;
@@ -147,31 +148,34 @@
     <p class="text-xs text-text-muted mt-2">Affichez ce lien sur un écran/projecteur pour le suivi en direct.</p>
 </div>
 
-<div class="border border-card-border bg-white rounded-lg p-4">
-    <div class="flex justify-between items-center mb-3">
-        <h2 class="font-semibold">Équipes inscrites ({teamList.length})</h2>
+<details class="border border-card-border bg-white rounded-lg group" open>
+    <summary class="flex justify-between items-center px-4 py-3 cursor-pointer select-none">
+        <div class="flex items-center gap-2">
+            <ChevronRight size={16} class="text-text-muted transition-transform group-open:rotate-90" />
+            <h2 class="font-semibold">Équipes inscrites ({teamList.length})</h2>
+        </div>
         <ToolButton onclick={refreshTeams} label="Rafraîchir la liste"><RefreshCw size={16} /></ToolButton>
-    </div>
-    {#if teamList.length === 0}
-        <p class="text-sm text-text-muted italic">Aucune équipe inscrite.</p>
-    {:else}
-        <div class="flex flex-col gap-2">
-            {#each teamList as team}
-                <div class="border rounded p-3 {seedGroupColors[team.seedGroup] || ''}">
-                    <div class="flex flex-row justify-between">
-                        <p class="font-medium">{team.name}</p>
+    </summary>
+    <div class="px-4 pb-4">
+        {#if teamList.length === 0}
+            <p class="text-sm text-text-muted italic">Aucune équipe inscrite.</p>
+        {:else}
+            <div class="flex flex-col gap-1 max-h-[50vh] overflow-y-auto">
+                {#each teamList as team}
+                    <div class="flex items-center justify-between border rounded px-3 py-1.5 {seedGroupColors[team.seedGroup] || ''}">
+                        <div class="min-w-0">
+                            <span class="font-medium text-sm">{team.name}</span>
+                            <span class="text-xs text-text-muted ml-2 truncate">{team.members.map((m: any) => m.name).join(', ')}</span>
+                        </div>
                         {#if team.seedGroup > 0}
-                            <p class="text-xs text-text-muted">Seed: {team.seedGroup}</p>
+                            <span class="text-xs text-text-muted shrink-0 ml-2">S{team.seedGroup}</span>
                         {/if}
                     </div>
-                    <p class="text-sm text-text-muted">
-                        {team.members.map((m: any) => m.name).join(', ')}
-                    </p>
-                </div>
-            {/each}
-        </div>
-    {/if}
-</div>
+                {/each}
+            </div>
+        {/if}
+    </div>
+</details>
 
 {#if teamList.length >= 2}
     <Button onclick={() => showSeeding = true} class="w-full py-3">

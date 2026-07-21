@@ -13,9 +13,16 @@
 
     onMount(async () => {
         const id = page.params.id;
-        const stored = localStorage.getItem(`admin_${id}`);
-        if (stored) {
-            adminToken = JSON.parse(stored).token;
+        const urlToken = new URLSearchParams(window.location.search).get('token');
+        if (urlToken) {
+            localStorage.setItem(`admin_${id}`, JSON.stringify({ token: urlToken }));
+            adminToken = urlToken;
+            history.replaceState(null, '', window.location.pathname);
+        } else {
+            const stored = localStorage.getItem(`admin_${id}`);
+            if (stored) {
+                adminToken = JSON.parse(stored).token;
+            }
         }
         const contestRes = await fetch(`/api/contests/${id}`);
         contest = await contestRes.json();

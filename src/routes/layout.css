@@ -35,3 +35,40 @@ input[readonly] {
 input::-ms-reveal {
     display: none;
 }
+
+details > summary {
+    list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+    display: none;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-card-border) transparent;
+}
+
+*::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+    background: transparent;
+    margin: 4px 0;
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: var(--color-card-border);
+    border-radius: 2px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-text-muted);
+}
+
+.overflow-y-auto,
+.overflow-y-scroll {
+    scrollbar-gutter: stable;
+}
