@@ -11,7 +11,7 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"db:push": "npx drizzle-kit push --config drizzle.config.ts",
-		"db:push:pg": "npx drizzle-kit push --config drizzle.config.pg.ts"
+		"db:push:prod": "node scripts/db-push-prod.mjs"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^7.0.1",
