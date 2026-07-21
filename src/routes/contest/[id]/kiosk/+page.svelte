@@ -194,12 +194,18 @@
                         type="text"
                         bind:value={loginTeamName}
                         oninput={updateFilteredNames}
+                        onfocus={updateFilteredNames}
+                        onblur={() => { filteredNames = []; }}
                         placeholder="Votre équipe"
                         class="w-full border rounded px-3 py-2 mt-1"
                         autocomplete="off"
                     />
                     {#if filteredNames.length > 0}
-                        <div class="absolute left-0 right-0 mt-1 bg-white border rounded shadow-lg z-10">
+                        <!-- svelte-ignore a11y_no_static_element_interactions -->
+                        <div
+                            class="absolute left-0 right-0 mt-1 bg-white border rounded shadow-lg z-10"
+                            onmousedown={(e) => e.preventDefault()}
+                        >
                             {#each filteredNames as name}
                                 <button
                                     type="button"
