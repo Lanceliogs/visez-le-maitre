@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import { extractToken, getTeamFromToken } from '$lib/server/auth';
 import { getContest } from '$lib/server/contest';
 import { getTeamMatches, getContestMatches, buildCurrentMatch, buildCompletedMatches } from '$lib/server/contest/matches';
-import { computeQualifications } from '$lib/server/contest/standings';
+import { computeQualifications, computeFinalRanking } from '$lib/server/contest/standings';
 
 export async function GET({ request, params }) {
     const token = extractToken(request);
@@ -31,7 +31,11 @@ export async function GET({ request, params }) {
     const completedMatches = await buildCompletedMatches(team.id, team.name, teamMatches);
 
     let ranking = null;
-    if (contest.status === 'pools' || contest.status === 'finals' || contest.status === 'completed') {
+    let finalRank = null;
+    if (contest.status === 'finals' || contest.status === 'completed') {
+        const poolRanking = await computeQualifications(params.id);
+        ranking = poolRanking.find(r => r.teamId === team.id) ?? null;
+    } else if (contest.status === 'pools') {
         const allMatches = await getContestMatches(params.id);
         const poolMatches = allMatches.filter(m => m.poolId !== null);
         const allDone = poolMatches.length > 0 && poolMatches.every(m => m.status === 'completed');
@@ -39,6 +43,10 @@ export async function GET({ request, params }) {
             const poolRanking = await computeQualifications(params.id);
             ranking = poolRanking.find(r => r.teamId === team.id) ?? null;
         }
+    }
+    if (contest.status === 'completed') {
+        const finalRanking = await computeFinalRanking(params.id);
+        finalRank = finalRanking.find(r => r.teamId === team.id) ?? null;
     }
 
     return json({
@@ -49,5 +57,6 @@ export async function GET({ request, params }) {
         currentMatch,
         completedMatches,
         ranking,
+        finalRank,
     });
 }

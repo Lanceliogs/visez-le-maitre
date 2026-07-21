@@ -1,7 +1,8 @@
-base_url: "https://visez-le-maitre.vercel.app/"
+#base_url: "https://visez-le-maitre.vercel.app/"
+base_url: "http://localhost:5173/"
 
 contest:
-  name: "Test Concours 64 équipes"
+  name: "Test Concours 20 équipes"
   teamSize: 2
   poolSize: 4
   scoreTarget: 13
@@ -9,6 +10,6 @@ contest:
   nbConsolante: 8
 
 teams:
-  count: 64
+  count: 20
   name_prefix: "Equipe"
   pin_prefix: "1"

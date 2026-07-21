@@ -204,7 +204,7 @@
                 {/if}
             </div>
         {:else}
-            <p class="text-sm text-text-muted mt-2">En attente des résultats.</p>
+            <p class="text-sm text-text-muted mt-2">Classement en cours de calcul...</p>
         {/if}
     </div>
 {/if}

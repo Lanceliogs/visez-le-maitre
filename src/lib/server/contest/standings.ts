@@ -2,6 +2,7 @@ import { getContestPools } from './pools';
 import { getContestMatches } from './matches';
 import { getContestTeams } from './teams';
 import { getContest } from './contests';
+import type { Match } from './types';
 
 export type TeamStanding = {
     teamId: string;
@@ -133,4 +134,98 @@ export async function computeQualifications(contestId: string): Promise<PoolRank
             qualification,
         };
     });
+}
+
+export type FinalRanking = {
+    teamId: string;
+    teamName: string;
+    finalRank: number;
+    bracket: 'principale' | 'consolante' | 'eliminee';
+};
+
+export async function computeFinalRanking(contestId: string): Promise<FinalRanking[]> {
+    const contest = await getContest(contestId);
+    if (!contest) return [];
+
+    const matches = await getContestMatches(contestId);
+    const qualifications = await computeQualifications(contestId);
+
+    const poolRankMap = new Map(qualifications.map(q => [q.teamId, q.rank]));
+    const teamNameMap = new Map(qualifications.map(q => [q.teamId, q.teamName]));
+
+    const results: FinalRanking[] = [];
+
+    for (const bracketName of ['principale', 'consolante'] as const) {
+        const offset = bracketName === 'principale' ? 0 : contest.nbQualified;
+        const bracketMatches = matches.filter(m => m.bracket === bracketName && m.status === 'completed') as Match[];
+
+        if (bracketMatches.length === 0) continue;
+
+        const maxRound = Math.max(...bracketMatches.map(m => m.bracketRound!));
+
+        // Winner of the finale
+        const finale = bracketMatches.filter(m => m.bracketRound === maxRound);
+        if (finale.length === 1 && finale[0].winnerId) {
+            const winnerId = finale[0].winnerId;
+            const loserId = finale[0].team1Id === winnerId ? finale[0].team2Id : finale[0].team1Id;
+
+            results.push({
+                teamId: winnerId,
+                teamName: teamNameMap.get(winnerId) ?? '?',
+                finalRank: offset + 1,
+                bracket: bracketName,
+            });
+            results.push({
+                teamId: loserId,
+                teamName: teamNameMap.get(loserId) ?? '?',
+                finalRank: offset + 2,
+                bracket: bracketName,
+            });
+        }
+
+        // Losers of earlier rounds get rank bands
+        // Round maxRound-1 (semis): ranks 3-4
+        // Round maxRound-2 (quarters): ranks 5-8
+        // Round maxRound-3: ranks 9-16, etc.
+        for (let round = maxRound - 1; round >= 1; round--) {
+            const roundMatches = bracketMatches.filter(m => m.bracketRound === round);
+            const bandStart = offset + Math.pow(2, maxRound - round - 1) + 1;
+
+            const losers: { teamId: string; poolRank: number }[] = [];
+            for (const m of roundMatches) {
+                if (!m.winnerId) continue;
+                const loserId = m.team1Id === m.winnerId ? m.team2Id : m.team1Id;
+                losers.push({ teamId: loserId, poolRank: poolRankMap.get(loserId) ?? 999 });
+            }
+
+            losers.sort((a, b) => a.poolRank - b.poolRank);
+
+            for (let i = 0; i < losers.length; i++) {
+                results.push({
+                    teamId: losers[i].teamId,
+                    teamName: teamNameMap.get(losers[i].teamId) ?? '?',
+                    finalRank: bandStart + i,
+                    bracket: bracketName,
+                });
+            }
+        }
+    }
+
+    // Eliminated teams keep their pool rank offset
+    const rankedTeamIds = new Set(results.map(r => r.teamId));
+    const eliminated = qualifications
+        .filter(q => q.qualification === 'eliminee')
+        .filter(q => !rankedTeamIds.has(q.teamId));
+
+    for (const team of eliminated) {
+        results.push({
+            teamId: team.teamId,
+            teamName: team.teamName,
+            finalRank: team.rank,
+            bracket: 'eliminee',
+        });
+    }
+
+    results.sort((a, b) => a.finalRank - b.finalRank);
+    return results;
 }
