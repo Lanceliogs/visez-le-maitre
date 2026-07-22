@@ -26,3 +26,7 @@ vite.config.ts.timestamp-*
 
 # DB
 local.db
+
+# tests
+**/.venv/
+state_*.json

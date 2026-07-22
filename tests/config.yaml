@@ -1,5 +1,5 @@
-base_url: "https://visez-le-maitre.vercel.app/"
-#base_url: "http://localhost:5173/"
+#base_url: "https://visez-le-maitre.vercel.app/"
+base_url: "http://localhost:5173/"
 
 contest:
   name: "Test Concours 20 équipes"

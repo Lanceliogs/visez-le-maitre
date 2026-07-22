@@ -32,9 +32,21 @@ export async function GET({ request, params }) {
 
     let ranking = null;
     let finalRank = null;
+    let bracketDone = false;
+
     if (contest.status === 'finals' || contest.status === 'completed') {
         const poolRanking = await computeQualifications(params.id);
         ranking = poolRanking.find(r => r.teamId === team.id) ?? null;
+
+        if (contest.status === 'finals' && !currentMatch && ranking?.qualification !== 'eliminee') {
+            const bracketMatches = teamMatches.filter(m => m.bracket !== null);
+            const lastBracket = bracketMatches
+                .filter(m => m.status === 'completed')
+                .sort((a, b) => (b.bracketRound ?? 0) - (a.bracketRound ?? 0))[0];
+            if (lastBracket && lastBracket.winnerId !== team.id) {
+                bracketDone = true;
+            }
+        }
     } else if (contest.status === 'pools') {
         const allMatches = await getContestMatches(params.id);
         const poolMatches = allMatches.filter(m => m.poolId !== null);
@@ -58,5 +70,6 @@ export async function GET({ request, params }) {
         completedMatches,
         ranking,
         finalRank,
+        bracketDone,
     });
 }

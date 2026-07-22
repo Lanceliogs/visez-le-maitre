@@ -5,7 +5,9 @@
     import Eye from '@lucide/svelte/icons/eye';
     import EyeOff from '@lucide/svelte/icons/eye-off';
     import TeamWaiting from '../team/TeamWaiting.svelte';
-    import TeamPoolMatch from '../team/TeamPoolMatch.svelte';
+    import TeamMatchPlay from '../team/TeamMatchPlay.svelte';
+    import TeamStatus from '../team/TeamStatus.svelte';
+    import TeamMatchHistory from '../team/TeamMatchHistory.svelte';
 
     type Member = { name: string; disabled: boolean };
 
@@ -334,24 +336,18 @@
 
             {#if team.phase === 'registration'}
                 <TeamWaiting />
-            {:else if team.phase === 'pools'}
-                <TeamPoolMatch
-                    currentMatch={team.currentMatch}
-                    completedMatches={team.completedMatches}
-                    ranking={team.ranking}
-                    contestId={page.params.id!}
-                    {teamToken}
-                    onRefresh={refreshStatus}
-                />
-            {:else if team.phase === 'finals'}
-                <TeamPoolMatch
-                    currentMatch={team.currentMatch}
-                    completedMatches={team.completedMatches}
-                    ranking={team.ranking}
-                    contestId={page.params.id!}
-                    {teamToken}
-                    onRefresh={refreshStatus}
-                />
+            {:else if team.phase === 'pools' || team.phase === 'finals'}
+                {#if team.currentMatch}
+                    <TeamMatchPlay
+                        currentMatch={team.currentMatch}
+                        contestId={page.params.id!}
+                        {teamToken}
+                        onRefresh={refreshStatus}
+                    />
+                {:else}
+                    <TeamStatus phase={team.phase} ranking={team.ranking} bracketDone={team.bracketDone} />
+                {/if}
+                <TeamMatchHistory completedMatches={team.completedMatches} />
             {:else if team.phase === 'completed'}
                 <div class="border border-card-border bg-white rounded-lg p-4 text-center">
                     <p class="text-lg font-semibold text-primary">Concours terminé</p>
@@ -376,21 +372,7 @@
                         <p class="text-sm text-text-muted mt-2">Merci pour votre participation !</p>
                     {/if}
                 </div>
-                {#if team.completedMatches?.length > 0}
-                    <div class="border border-card-border bg-white rounded-lg p-4">
-                        <h2 class="font-semibold mb-2">Vos matchs</h2>
-                        <div class="flex flex-col gap-1">
-                            {#each team.completedMatches as match}
-                                <div class="flex items-center justify-between text-sm border-b border-gray-100 py-1 last:border-0">
-                                    <span class="font-medium">vs {match.opponentName}</span>
-                                    <span class="font-bold {match.won ? 'text-green-600' : 'text-red-500'}">
-                                        {match.scoreTeam1} - {match.scoreTeam2}
-                                    </span>
-                                </div>
-                            {/each}
-                        </div>
-                    </div>
-                {/if}
+                <TeamMatchHistory completedMatches={team.completedMatches ?? []} />
             {/if}
         </div>
     {/if}
