@@ -31,7 +31,7 @@
     <header class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-card-border bg-white">
         <div class="flex flex-row gap-2 items-center">
             <a href="/" aria-label="ACCUEIL">
-                <img src={favicon} alt="" width="48" height="48" />
+                <img src={favicon} alt="" width="30" height="30" />
             </a>
             <span class="text-lg font-bold text-primary tracking-tight">Visez Le Maître</span>
         </div>
@@ -40,7 +40,7 @@
         {/if}
     </header>
 
-    <main bind:this={mainEl} onscroll={onScroll} class="flex-1 overflow-y-auto relative">
+    <main bind:this={mainEl} onscroll={onScroll} class="flex-1 min-h-0 overflow-y-auto overscroll-contain relative">
         {#if isFullWidth}
             <div class="w-full px-4 py-6">
                 {@render children()}

@@ -10,6 +10,7 @@
     let teamList = $state<any[]>([]);
     let refreshTick = $state(0);
     let eventSource: EventSource | null = null;
+    let minTeams = $state(0);
 
     onMount(async () => {
         const id = page.params.id;
@@ -29,6 +30,8 @@
         const teamsRes = await fetch(`/api/contests/${id}/teams`);
         teamList = await teamsRes.json();
 
+        minTeams = contest.nbQualified + (contest.nbConsolante ?? 0);
+
         eventSource = new EventSource(`/api/contests/${id}/events`);
         const onRefresh = () => { refreshAll(); refreshTick++; };
         eventSource.addEventListener('refresh', onRefresh);
@@ -47,11 +50,13 @@
         ]);
         contest = await contestRes.json();
         teamList = await teamsRes.json();
+        minTeams = contest.nbQualified + (contest.nbConsolante ?? 0);
     }
 
     async function reload() {
         await refreshAll();
     }
+
 </script>
 
 {#if !contest}
@@ -70,6 +75,7 @@
                 contestId={page.params.id!}
                 {adminToken}
                 {teamList}
+                minTeams={minTeams}
                 onStart={reload}
             />
         {:else if contest.status === 'pools'}

@@ -8,10 +8,11 @@
     import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
     import ChevronRight from '@lucide/svelte/icons/chevron-right';
 
-    let { contestId, adminToken, teamList, onStart } = $props<{
+    let { contestId, adminToken, teamList, minTeams, onStart } = $props<{
         contestId: string;
         adminToken: string;
         teamList: any[];
+        minTeams: number;
         onStart: () => void;
     }>();
 
@@ -29,6 +30,8 @@
     let liveLink = $state('');
     let liveCopied = $state(false);
 
+    let canStart = $state(false);
+
     const seedGroupColors = ['', 'bg-blue-100 border-blue-300', 'bg-orange-100 border-orange-300', 'bg-green-100 border-green-300', 'bg-purple-100 border-purple-300'];
 
     onMount(() => {
@@ -43,6 +46,7 @@
     async function refreshTeams() {
         const res = await fetch(`/api/contests/${contestId}/teams`);
         teamList = await res.json();
+        canStart = minTeams > 0 && minTeams <= teamList.length
     }
 
     async function startContest() {
@@ -54,10 +58,11 @@
             return;
         }
         starting = true;
-        await fetch(`/api/contests/${contestId}/start-pools`, {
+        const resp = await fetch(`/api/contests/${contestId}/start-pools`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${adminToken}` },
         });
+        
         starting = false;
         onStart();
     }
@@ -188,10 +193,15 @@
     <Button onclick={() => showSeeding = true} class="w-full py-3">
         Groupes d'exclusion - Seeding
     </Button>
-    <Button onclick={startContest} variant="danger" disabled={starting} class="w-full py-3">
-        {starting ? 'Démarrage...' : 'Fermer les inscriptions et démarrer'}
-    </Button>
 {/if}
+
+<Button onclick={startContest} variant="danger" disabled={!canStart || starting} class="w-full py-3">
+    {starting
+        ? 'Démarrage...'
+        : !canStart
+        ? `Nombre d'équipes minimum non atteint (${minTeams})`
+        : 'Fermer les inscriptions et démarrer'}
+</Button>
 
 {#if showQr}
     <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

@@ -16,8 +16,8 @@
 
     <!-- Hero -->
     <section class="text-center space-y-3">
-        <div class="inline-flex items-center justify-center w-25 h-25 rounded-full bg-primary-light">
-            <img src={favicon} alt="" width="50" height="50" />
+        <div class="inline-flex items-center justify-center w-60 h-60 rounded-full bg-primary-light">
+            <img src={favicon} alt="" width="150" height="150" />
         </div>
         <h1 class="text-2xl font-bold text-primary">Visez Le Maître</h1>
         <p class="text-text-muted">Gestionnaire de concours de Palet Vendéen</p>
