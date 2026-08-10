@@ -3,6 +3,7 @@
     import QRCode from 'qrcode';
     import Button from '$lib/components/button.svelte';
     import ToolButton from '$lib/components/tool-button.svelte';
+    import { confirm } from '$lib/utils/confirm.svelte';
     import RefreshCw from '@lucide/svelte/icons/refresh-cw';
     import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
     import ChevronRight from '@lucide/svelte/icons/chevron-right';
@@ -45,7 +46,13 @@
     }
 
     async function startContest() {
-        if (!confirm('Fermer les inscriptions et démarrer le concours ?')) return;
+        if (!await confirm('Fermer les inscriptions et démarrer le concours ?', {
+            'title': 'Démarrer le concours ?',
+            'confirmtext': 'Démarrer',
+            'variant': 'danger'
+        })) {
+            return;
+        }
         starting = true;
         await fetch(`/api/contests/${contestId}/start-pools`, {
             method: 'POST',

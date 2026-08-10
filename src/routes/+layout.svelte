@@ -2,8 +2,9 @@
     import './layout.css';
     import favicon from '$lib/assets/favicon.svg';
     import ContextMenu from '$lib/components/context-menu.svelte';
+    import ConfirmModal from '$lib/components/confirm-modal.svelte';
+    import { confirmState, resolveConfirm } from '$lib/utils/confirm.svelte';
     import ArrowUp from '@lucide/svelte/icons/arrow-up';
-    import Target from '@lucide/svelte/icons/target';
     import { page } from '$app/state';
 
     let { children } = $props();
@@ -65,6 +66,18 @@
         <footer class="shrink-0 text-center text-sm text-text-muted py-4 border-t border-card-border bg-white">
             Visez Le Maître — 2026
         </footer>
+    {/if}
+
+    {#if confirmState.open}
+        <ConfirmModal
+            title={confirmState.title}
+            label={confirmState.label}
+            confirmtext={confirmState.confirmtext}
+            canceltext={confirmState.canceltext}
+            variant={confirmState.variant}
+            onconfirm={() => resolveConfirm(true)}
+            oncancel={() => resolveConfirm(false)}
+        />
     {/if}
 
 </div>

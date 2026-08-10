@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import Button from '$lib/components/button.svelte';
+    import { confirm } from '$lib/utils/confirm.svelte';
 
     let password = $state('');
     let sessionToken = $state('');
@@ -80,7 +81,13 @@
     }
 
     async function deleteContest(id: string, name: string) {
-        if (!confirm(`Supprimer le concours « ${name} » et toutes ses données ?`)) return;
+        if (!await confirm(`Supprimer le concours « ${name} » et toutes ses données ? Cette action est irreversible.`, {
+            'variant': 'danger',
+            'title': 'Supprimer le concours ?',
+            'confirmtext': 'Supprimer',
+        })) {
+            return;
+        }
         loading = true;
         await fetch(`/api/admin/contests/${id}`, {
             method: 'DELETE',
@@ -91,7 +98,11 @@
     }
 
     async function cleanup() {
-        if (!confirm(`Supprimer tous les concours inactifs depuis plus de ${cleanupDays} jours ?`)) return;
+        if (!await confirm(`Supprimer tous les concours inactifs depuis plus de ${cleanupDays} jours ?`, {
+            'variant': 'danger',
+            'title': 'Supprimer les concours inactifs',
+            'confirmtext': 'Supprimer'
+        })) return;
         loading = true;
         cleanupResult = null;
         const res = await fetch('/api/admin/cleanup', {
