@@ -1,6 +1,5 @@
 <script lang="ts">
     import { page } from '$app/state';
-    import { isAdmin } from '$lib/admin.svelte';
     import ToolButton from '$lib/components/tool-button.svelte';
     import Menu from '@lucide/svelte/icons/menu';
 

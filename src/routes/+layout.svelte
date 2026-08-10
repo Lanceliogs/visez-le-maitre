@@ -29,7 +29,9 @@
 
     <header class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-card-border bg-white">
         <div class="flex flex-row gap-2 items-center">
-            <Target size={28} class="text-primary" />
+            <a href="/" aria-label="ACCUEIL">
+                <img src={favicon} alt="" width="48" height="48" />
+            </a>
             <span class="text-lg font-bold text-primary tracking-tight">Visez Le Maître</span>
         </div>
         {#if !isFullWidth}
@@ -60,7 +62,7 @@
     </button>
 
     {#if !isFullWidth}
-        <footer class="flex-shrink-0 text-center text-sm text-text-muted py-4 border-t border-card-border bg-white">
+        <footer class="shrink-0 text-center text-sm text-text-muted py-4 border-t border-card-border bg-white">
             Visez Le Maître — 2026
         </footer>
     {/if}

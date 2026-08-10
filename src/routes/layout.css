@@ -2,17 +2,17 @@
 @plugin '@tailwindcss/forms';
 
 @theme {
-    --color-primary: #4A7C59;
-    --color-primary-hover: #3A6347;
-    --color-primary-light: #EAF3ED;
-    --color-accent: #8B5E3C;
-    --color-accent-hover: #6D4A2F;
-    --color-danger: #C0392B;
-    --color-danger-hover: #962D22;
-    --color-surface: #F7FAF8;
-    --color-card-border: #D6E3DA;
-    --color-text: #2B3D32;
-    --color-text-muted: #6B7E72;
+  --color-primary: #1C55DB;
+  --color-primary-hover: #1748BC;
+  --color-primary-light: #E8F0FF;
+  --color-accent: #00A6A6;
+  --color-accent-hover: #008787;
+  --color-danger: #D64545;
+  --color-danger-hover: #B93636;
+  --color-surface: #F8FAFC;
+  --color-card-border: #DCE3EE;
+  --color-text: #172033;
+  --color-text-muted: #667085;
 }
 
 body {

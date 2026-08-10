@@ -1,4 +1,5 @@
 <script lang="ts">
+    import favicon from '$lib/assets/favicon.svg';
     import Target from '@lucide/svelte/icons/target';
     import Users from '@lucide/svelte/icons/users';
     import Trophy from '@lucide/svelte/icons/trophy';
@@ -15,8 +16,8 @@
 
     <!-- Hero -->
     <section class="text-center space-y-3">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-light">
-            <Target size={32} class="text-primary" />
+        <div class="inline-flex items-center justify-center w-25 h-25 rounded-full bg-primary-light">
+            <img src={favicon} alt="" width="50" height="50" />
         </div>
         <h1 class="text-2xl font-bold text-primary">Visez Le Maître</h1>
         <p class="text-text-muted">Gestionnaire de concours de Palet Vendéen</p>
