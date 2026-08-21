@@ -6,6 +6,8 @@
     import { confirmState, resolveConfirm } from '$lib/utils/confirm.svelte';
     import ArrowUp from '@lucide/svelte/icons/arrow-up';
     import { page } from '$app/state';
+    import { state as refreshState } from '$lib/utils/refresh.svelte';
+    import { onMount } from 'svelte';
 
     let { children } = $props();
 
@@ -14,6 +16,14 @@
     let isFullWidth = $derived(isKiosk || isLive);
     let mainEl: HTMLElement;
     let showScrollTop = $state(false);
+    let now = $state(Date.now());
+
+    onMount(() => {
+        const interval = setInterval(() => {
+            now = Date.now();
+        }, 10_000);
+        return () => clearInterval(interval);
+    });
 
     function onScroll() {
         showScrollTop = mainEl.scrollTop > 100;
@@ -22,6 +32,35 @@
     function scrollToTop() {
         mainEl.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
+    function updatedAt() {
+        const id = page.params.id;
+        if (!id || id != refreshState.contestId)
+            return "";
+
+        if (!refreshState.lastRefresh)
+            return "Pas encore mis à jour";
+
+        const seconds = Math.floor(
+            (now - refreshState.lastRefresh) / 1000
+        );
+        if (seconds < 5)
+            return "Mis à jour à l'instant";
+        if (seconds < 60)
+            return `Mis à jour il y a ${seconds} sec`;
+
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60)
+            return `Mis à jour il y a ${minutes} min`;
+        return `Mis à jour il y a ${Math.floor(minutes / 60)} h`;
+    }
+
+    function footerText() {
+        const text = updatedAt();
+        if (!text)
+            return "Visez Le Maître — 2026"
+        return `Visez Le Maître — 2026 — ${text}`
+    }
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -29,12 +68,10 @@
 <div class="h-screen flex flex-col overflow-hidden">
 
     <header class="shrink-0 flex items-center justify-between px-4 py-3 border-b border-card-border bg-white">
-        <div class="flex flex-row gap-2 items-center">
-            <a href="/" aria-label="ACCUEIL">
-                <img src={favicon} alt="" width="30" height="30" />
-            </a>
+        <a href="/" aria-label="ACCUEIL" class="flex flex-row gap-2 items-center">
+            <img src={favicon} alt="" width="30" height="30" />
             <span class="text-lg font-bold text-primary tracking-tight">Visez Le Maître</span>
-        </div>
+        </a>
         {#if !isFullWidth}
             <ContextMenu />
         {/if}
@@ -64,7 +101,7 @@
 
     {#if !isFullWidth}
         <footer class="shrink-0 text-center text-sm text-text-muted py-4 border-t border-card-border bg-white">
-            Visez Le Maître — 2026
+            {footerText()}
         </footer>
     {/if}
 

@@ -4,6 +4,7 @@
     import AdminRegistration from './AdminRegistration.svelte';
     import AdminPools from './AdminPools.svelte';
     import AdminBrackets from './AdminBrackets.svelte';
+    import { markRefreshed } from '$lib/utils/refresh.svelte';
 
     let contest = $state<any>(null);
     let adminToken = $state('');
@@ -44,6 +45,8 @@
 
     async function refreshAll() {
         const id = page.params.id;
+        if (!id) return;
+        
         const [contestRes, teamsRes] = await Promise.all([
             fetch(`/api/contests/${id}`),
             fetch(`/api/contests/${id}/teams`),
@@ -51,6 +54,7 @@
         contest = await contestRes.json();
         teamList = await teamsRes.json();
         minTeams = contest.nbQualified + (contest.nbConsolante ?? 0);
+        markRefreshed(id);
     }
 
     async function reload() {

@@ -8,6 +8,7 @@
     import TeamMatchPlay from '../team/TeamMatchPlay.svelte';
     import TeamStatus from '../team/TeamStatus.svelte';
     import TeamMatchHistory from '../team/TeamMatchHistory.svelte';
+    import { markRefreshed } from '$lib/utils/refresh.svelte';
 
     type Member = { name: string; disabled: boolean };
 
@@ -37,30 +38,34 @@
     const INACTIVITY_MS = 2 * 60 * 1000;
 
     onMount(async () => {
-        const res = await fetch(`/api/contests/${page.params.id}`);
+        const id = page.params.id;
+        if (!id) return;
+
+        const res = await fetch(`/api/contests/${id}`);
         if (!res.ok) return;
         contest = await res.json();
 
         members = Array.from({ length: contest.teamSize }, () => ({ name: '', disabled: false }));
 
-        const teamsRes = await fetch(`/api/contests/${page.params.id}/teams`);
+        const teamsRes = await fetch(`/api/contests/${id}/teams`);
         if (teamsRes.ok) {
             const list = await teamsRes.json();
             teamNames = list.map((t: any) => t.name);
         }
 
-        eventSource = new EventSource(`/api/contests/${page.params.id}/events`);
+        eventSource = new EventSource(`/api/contests/${id}/events`);
         const onRefresh = async () => {
             if (mode === 'team') refreshStatus();
             const [contestRes, teamsRes] = await Promise.all([
-                fetch(`/api/contests/${page.params.id}`),
-                fetch(`/api/contests/${page.params.id}/teams`),
+                fetch(`/api/contests/${id}`),
+                fetch(`/api/contests/${id}/teams`),
             ]);
             if (contestRes.ok) contest = await contestRes.json();
             if (teamsRes.ok) teamNames = (await teamsRes.json()).map((t: any) => t.name);
             if (mode === 'register' && contest?.status !== 'registration') {
                 mode = 'login';
             }
+            markRefreshed(id);
         };
         eventSource.addEventListener('refresh', onRefresh);
         eventSource.addEventListener('open', onRefresh);

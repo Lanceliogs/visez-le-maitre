@@ -6,6 +6,7 @@
     import LiveBrackets from './LiveBrackets.svelte';
     import LiveCompleted from './LiveCompleted.svelte';
     import type { ContestView, TeamView, MatchView, PoolStandings } from '$lib/types';
+    import { markRefreshed } from '$lib/utils/refresh.svelte';
 
     let contest = $state<ContestView | null>(null);
     let teams = $state<TeamView[]>([]);
@@ -28,6 +29,8 @@
     });
 
     async function fetchAll() {
+        if (!contestId) return;
+        
         const [contestRes, teamsRes, matchesRes, standingsRes] = await Promise.all([
             fetch(`/api/contests/${contestId}`),
             fetch(`/api/contests/${contestId}/teams`),
@@ -38,6 +41,7 @@
         if (teamsRes.ok) teams = await teamsRes.json();
         if (matchesRes.ok) matches = await matchesRes.json();
         if (standingsRes.ok) standings = await standingsRes.json();
+        markRefreshed(contestId);
     }
 
     let phase = $derived(contest?.status ?? 'registration');

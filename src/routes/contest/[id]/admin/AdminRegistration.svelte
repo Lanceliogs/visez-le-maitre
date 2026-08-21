@@ -7,6 +7,7 @@
     import RefreshCw from '@lucide/svelte/icons/refresh-cw';
     import RotateCcw from '@lucide/svelte/icons/rotate-ccw';
     import ChevronRight from '@lucide/svelte/icons/chevron-right';
+    import { markRefreshed } from '$lib/utils/refresh.svelte';
 
     let { contestId, adminToken, teamList, minTeams, onStart } = $props<{
         contestId: string;
@@ -47,6 +48,7 @@
         const res = await fetch(`/api/contests/${contestId}/teams`);
         teamList = await res.json();
         canStart = minTeams > 0 && minTeams <= teamList.length
+        markRefreshed(contestId);
     }
 
     async function startContest() {

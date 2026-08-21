@@ -1,5 +1,6 @@
 <script lang="ts">
     import { page } from '$app/state';
+    import { markRefreshed } from '$lib/utils/refresh.svelte';
     import { onMount, onDestroy } from 'svelte';
 
     let contest = $state<any>(null);
@@ -22,8 +23,11 @@
     });
 
     async function refreshStandings() {
-        const res = await fetch(`/api/contests/${page.params.id}/standings`);
+        const id = page.params.id;
+        if (!id) return;
+        const res = await fetch(`/api/contests/${id}/standings`);
         if (res.ok) standings = await res.json();
+        markRefreshed(id);
     }
 </script>
 

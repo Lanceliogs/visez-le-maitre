@@ -5,6 +5,7 @@
     import TeamMatchPlay from './TeamMatchPlay.svelte';
     import TeamStatus from './TeamStatus.svelte';
     import TeamMatchHistory from './TeamMatchHistory.svelte';
+    import { markRefreshed } from '$lib/utils/refresh.svelte';
 
     let contest = $state<any>(null);
     let team = $state<any>(null);
@@ -47,10 +48,13 @@
     });
 
     async function refreshStatus() {
-        const res = await fetch(`/api/contests/${page.params.id}/status`, {
+        const id = page.params.id;
+        if (!id) return;
+        const res = await fetch(`/api/contests/${id}/status`, {
             headers: { 'Authorization': `Bearer ${teamToken}` },
         });
         if (res.ok) team = await res.json();
+        markRefreshed(id);
     }
 </script>
 
